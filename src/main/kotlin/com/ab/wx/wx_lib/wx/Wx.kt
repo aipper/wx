@@ -4,17 +4,20 @@ import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
+import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
 
-object Wx {
+class Wx(wxConfigProperties: WxConfigProperties) {
+    private val appId = wxConfigProperties.appId
+    private val appSec = wxConfigProperties.appSec
     private var callbackUrl = ""
     private var token = ""
     private var ticket = ""
 
     private val getTokenUrl =
-        "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WxConfigProperties.appId}&secret=${WxConfigProperties.appSec}"
+        "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSec}"
 
     private val getTicketUrl =
         "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${token}&type=jsapi"
@@ -45,7 +48,7 @@ object Wx {
         crypt.update(tmpStr.toByteArray(charset("UTF-8")))
         val signature = byteToHex(crypt.digest())
         map["url"] = url
-        map["appId"] = WxConfigProperties.appId
+        map["appId"] = appId
         map["jsapi_ticket"] = jsapi_ticket
         map["nonceStr"] = nonce_str
         map["timestamp"] = timestamp
