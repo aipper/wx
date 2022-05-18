@@ -1,10 +1,11 @@
 package com.ab.wx.wx_lib.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.stereotype.Component
 
-@ConfigurationProperties(value = WxConfigProperties.PREFIX)
+@Component
+@ConfigurationProperties(value ="wx")
 object WxConfigProperties {
-    const val PREFIX = "wx"
 
      lateinit var appId: String
      lateinit var appSec: String
