@@ -5,11 +5,11 @@ import com.ab.wx.wx_lib.const.R
 import java.security.MessageDigest
 import java.util.*
 
-fun ok(code: Int = BaseConst.success, msg: String, data: Any?): R {
+fun ok(code: Int = BaseConst.success, msg: String = "", data: Any? = null): R {
     return R(code, msg, data)
 }
 
-fun fail(code: Int = BaseConst.fail, msg: String, data: Any?): R {
+fun fail(code: Int = BaseConst.fail, msg: String = "", data: Any? = null): R {
     return R(code, msg, data)
 }
 
