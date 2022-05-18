@@ -1,5 +1,6 @@
 package com.ab.wx.wx_lib.wx
 
+import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
@@ -7,22 +8,18 @@ import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
 
-class Wx private constructor(appId: String, appSec: String) {
-    private var appId = ""
-    private var appSec = ""
+object Wx {
     private var callbackUrl = ""
     private var token = ""
     private var ticket = ""
 
     private val getTokenUrl =
-        "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$appSec"
+        "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WxConfigProperties.appId}&secret=${WxConfigProperties.appSec}"
 
     private val getTicketUrl =
         "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${token}&type=jsapi"
 
     init {
-        this.appSec = appSec
-        this.appId = appId
         genToken()
     }
 
@@ -48,7 +45,7 @@ class Wx private constructor(appId: String, appSec: String) {
         crypt.update(tmpStr.toByteArray(charset("UTF-8")))
         val signature = byteToHex(crypt.digest())
         map["url"] = url
-        map["appId"] = appId
+        map["appId"] = WxConfigProperties.appId
         map["jsapi_ticket"] = jsapi_ticket
         map["nonceStr"] = nonce_str
         map["timestamp"] = timestamp
