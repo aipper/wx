@@ -1,39 +1,47 @@
 package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
+import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
-import org.springframework.stereotype.Component
+import org.slf4j.LoggerFactory
 import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
 
 class Wx(wxConfigProperties: WxConfigProperties) {
+    private val logger = LoggerFactory.getLogger(Wx::class.java)
     private val appId = wxConfigProperties.appId
     private val appSec = wxConfigProperties.appSec
+    private val wxToken = wxConfigProperties.wxToken
     private var callbackUrl = ""
-    private var token = ""
-    private var ticket = ""
+    private val restTemplate = getRestTemplate()
 
     private val getTokenUrl =
         "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSec}"
 
-    private val getTicketUrl =
+    private fun getTicketUrl(token: String?) =
         "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${token}&type=jsapi"
 
-    init {
-        genToken()
-    }
-
+//    init {
+//        genToken()
+//    }
+    /**
+     * 获取token
+     */
     fun genToken() {
         val restTemplate = RestTemplate()
         val res = restTemplate.getForObject(getTokenUrl, WxToken::class.java)
         res?.let {
-            this.token = res.access_token
-            restTemplate.getForObject(getTicketUrl, WxTicket::class.java)?.let {
-                this.ticket = it.ticket
-            }
+            WxConst.accessToken = res.access_token
+            getTicket(res.access_token)
+        }
+    }
+
+    fun getTicket(token: String?) {
+        restTemplate.getForObject(getTicketUrl(token), WxTicket::class.java)?.let {
+            WxConst.ticket = it.ticket
         }
     }
 
@@ -53,15 +61,15 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         map["nonceStr"] = nonce_str
         map["timestamp"] = timestamp
         map["signature"] = signature
-        map["token"] = token
+        map["token"] = wxToken
         return map
     }
 
     fun check(signature: String, timestamp: String, nonce: String, echostr: String): String {
-        val list = arrayOf(token, timestamp, nonce)
+        val list = arrayOf(wxToken, timestamp, nonce)
         Arrays.sort(list)
         val sb = StringBuffer()
-        list.forEach { it -> sb.append(it) }
+        list.forEach { sb.append(it) }
         val str = sha1(sb.toString())
         if (str == signature)
             return echostr

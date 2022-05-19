@@ -1,7 +1,9 @@
 package com.ab.wx.wx_lib.fn
 
+import com.ab.wx.wx_lib.config.WxMappingJackson2HttpMessageConverter
 import com.ab.wx.wx_lib.const.BaseConst
 import com.ab.wx.wx_lib.const.R
+import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
 
@@ -16,7 +18,7 @@ fun fail(code: Int = BaseConst.fail, msg: String = "", data: Any? = null): R {
 fun sha1(str: String): String {
     val digest = MessageDigest.getInstance("SHA-1")
     val result = digest.digest(str.toByteArray())
-    return toHex(result)
+    return byteToHex(result)
 }
 
 fun toHex(byteArray: ByteArray): String {
@@ -39,11 +41,14 @@ fun toHex(byteArray: ByteArray): String {
 
 fun byteToHex(hash: ByteArray): String {
     val formatter = Formatter()
-    hash.forEach {
-        formatter.format("%02x", it)
+    var result = ""
+    formatter.use {
+        hash.forEach {
+            formatter.format("%02x", it)
+        }
+        result = formatter.toString()
+
     }
-    val result = formatter.toString()
-    formatter.close()
     return result
 }
 
@@ -54,4 +59,10 @@ fun create_nonce_str(): String {
 
 fun create_timestamp(): String {
     return "${System.currentTimeMillis() / 1000}"
+}
+
+fun getRestTemplate(): RestTemplate {
+    val res = RestTemplate()
+    res.messageConverters.add(WxMappingJackson2HttpMessageConverter())
+    return res
 }
