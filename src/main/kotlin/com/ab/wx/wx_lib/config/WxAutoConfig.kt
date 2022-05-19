@@ -23,12 +23,14 @@ class WxAutoConfig {
         logger.info("properties:$wxConfigProperties")
         val wx = Wx(wxConfigProperties)
         wx.genToken()
-        return  wx
+        return wx
     }
 
     @Bean
     @ConditionalOnMissingBean(MiniApp::class)
     fun miniApp(): MiniApp {
-        return MiniApp(wxConfigProperties)
+        val miniApp = MiniApp(wxConfigProperties)
+        miniApp.getAccessToken()
+        return miniApp
     }
 }

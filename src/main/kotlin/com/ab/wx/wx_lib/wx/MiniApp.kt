@@ -2,6 +2,7 @@ package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.const.MiniAppConst
+import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
 import com.ab.wx.wx_lib.fn.getRestTemplate
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
 import com.ab.wx.wx_lib.vo.miniapp.Code2SessionVo
@@ -35,7 +36,7 @@ class MiniApp(wxConfigProperties: WxConfigProperties) {
     /**
      * 统一消息回复
      */
-    fun uniformMsgSend() {
+    fun uniformMsgSend(dto: AppUniformMsgSendDto) {
         val url = """
             https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${MiniAppConst.accessToken}
         """.trimIndent()
