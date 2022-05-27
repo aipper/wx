@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 class Cron {
 
 
-    @Scheduled(fixedDelay = 2 * 3600 * 1000)
+    @Scheduled(fixedRate = 2 * 3600 * 1000)
     fun task() {
 
     }
