@@ -8,6 +8,7 @@ import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
 import com.ab.wx.wx_lib.vo.miniapp.Code2SessionVo
 import com.ab.wx.wx_lib.vo.miniapp.PhoneNumberVo
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpEntity
 import org.springframework.web.client.RestTemplate
 
 class MiniApp(wxConfigProperties: WxConfigProperties) {
@@ -52,7 +53,10 @@ class MiniApp(wxConfigProperties: WxConfigProperties) {
         val url = """
             https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${MiniAppConst.accessToken}
         """.trimIndent()
-        val res = restTemplate.getForObject(url, PhoneNumberVo::class.java)
+        val map = hashMapOf<String, String>()
+        map["code"] = code
+        val entity = HttpEntity(map)
+        val res = restTemplate.postForObject(url, entity, PhoneNumberVo::class.java)
         logger.info("res:$res")
         return res
     }
