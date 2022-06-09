@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
 
-fun ok(code: Int = BaseConst.success, msg: String = "", data: Any? = null): R {
+fun ok(data: Any? = null, code: Int = BaseConst.success, msg: String = ""): R {
     return R(code, msg, data)
 }
 

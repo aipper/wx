@@ -6,6 +6,7 @@ import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
 import com.ab.wx.wx_lib.fn.getRestTemplate
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
 import com.ab.wx.wx_lib.vo.miniapp.Code2SessionVo
+import com.ab.wx.wx_lib.vo.miniapp.PhoneNumberVo
 import org.springframework.web.client.RestTemplate
 
 class MiniApp(wxConfigProperties: WxConfigProperties) {
@@ -40,6 +41,19 @@ class MiniApp(wxConfigProperties: WxConfigProperties) {
         val url = """
             https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${MiniAppConst.accessToken}
         """.trimIndent()
+    }
 
+    /**
+     * 获取手机号
+     */
+    fun getPhoneNumber(code: String): String? {
+        val url = """
+            https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${MiniAppConst.accessToken}&code=${code}
+        """.trimIndent()
+        val res = restTemplate.getForObject(url, PhoneNumberVo::class.java)
+        res?.let {
+           return it.phone_info?.purePhoneNumber
+        }
+        return ""
     }
 }
