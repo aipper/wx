@@ -45,6 +45,13 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
     }
 
     /**
+     * 设置accessToken
+     */
+    fun setAccessToken(token: String) {
+        this.accessToken = token
+    }
+
+    /**
      * 统一消息回复
      */
     fun uniformMsgSend(dto: AppUniformMsgSendDto) {
