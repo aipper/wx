@@ -74,4 +74,8 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
         logger.info("res:$res")
         return res
     }
+
+    fun setExpireTime(string: String) {
+
+    }
 }
