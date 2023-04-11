@@ -6,4 +6,8 @@ object BaseConst {
     const val authFail = 401
 
 
+    /**
+     * 扫描二维码事件前缀
+     */
+    const val scanQrcodePrefix = "qrscene_"
 }

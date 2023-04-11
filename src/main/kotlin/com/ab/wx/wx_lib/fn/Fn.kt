@@ -66,3 +66,12 @@ fun getRestTemplate(): RestTemplate {
     res.messageConverters.add(WxMappingJackson2HttpMessageConverter())
     return res
 }
+
+
+fun getBase64Encoder(): Base64.Encoder {
+    return Base64.getEncoder()
+}
+
+fun getBase64Decoder(): Base64.Decoder {
+    return Base64.getDecoder()
+}
