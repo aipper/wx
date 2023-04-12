@@ -10,13 +10,12 @@ import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
 import com.ab.wx.wx_lib.vo.wx.WxCreateMenuVo
+import com.ab.wx.wx_lib.vo.wx.WxGetUserInfoVo
 import com.ab.wx.wx_lib.vo.wx.WxQrCodeVo
 import com.ab.wx.wx_lib.vo.wx.WxTemplateVo
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
@@ -48,7 +47,21 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private fun templateUrl(token: String?) =
         "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${token}"
 
+    /**
+     * 生成二维码
+     */
     private fun qrCodeUrl(token: String?) = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=${token}"
+
+    /**
+     * 展示二维码
+     */
+    private fun showQrCodeUrl(ticket: String) = "https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=${ticket}"
+
+    /**
+     * 获取用户信息
+     */
+    private fun getUserInfoUrl(token: String?, openId: String) =
+        "https://api.weixin.qq.com/cgi-bin/user/info?access_token=${token}&openid=${openId}&lang=zh_CN"
 
     /**
      * 获取token
@@ -110,12 +123,6 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     }
 
 
-    private fun getHeaders(): HttpHeaders {
-        val header = HttpHeaders()
-        header.contentType = MediaType.APPLICATION_JSON
-        return header
-    }
-
     /**
      * 生成永久二维码
      */
@@ -131,5 +138,27 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     fun genExpiredQrCode(dto: ExpiredQrCodeDto): WxQrCodeVo? {
         val entity = HttpEntity<ExpiredQrCodeDto>(dto, getHeaders())
         return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
+    }
+
+    /**
+     * 生成永久二维码的图形
+     */
+    fun showQrCode(dto: PermanentQrCodeDto): String? {
+        val qrCodeVo = genPermanentQrCode(dto)
+        return qrCodeVo?.ticket?.let { showQrCodeUrl(it) }
+    }
+
+    /**
+     * 获取用户信息
+     */
+    fun getUserInfo(openId: String): WxGetUserInfoVo? {
+        return restTemplate.getForObject(getUserInfoUrl(WxConst.accessToken, openId), WxGetUserInfoVo::class.java)
+    }
+
+    /**
+     * 获取appid
+     */
+    fun getAppId(): String {
+        return appId
     }
 }

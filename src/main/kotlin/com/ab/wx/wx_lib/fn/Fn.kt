@@ -3,6 +3,8 @@ package com.ab.wx.wx_lib.fn
 import com.ab.wx.wx_lib.config.WxMappingJackson2HttpMessageConverter
 import com.ab.wx.wx_lib.const.BaseConst
 import com.ab.wx.wx_lib.const.R
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
@@ -74,4 +76,9 @@ fun getBase64Encoder(): Base64.Encoder {
 
 fun getBase64Decoder(): Base64.Decoder {
     return Base64.getDecoder()
+}
+fun getHeaders(): HttpHeaders {
+    val header = HttpHeaders()
+    header.contentType = MediaType.APPLICATION_JSON
+    return header
 }
