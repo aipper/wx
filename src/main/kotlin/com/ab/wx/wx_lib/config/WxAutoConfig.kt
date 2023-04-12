@@ -6,15 +6,13 @@ import org.springframework.context.annotation.Configuration
 import javax.annotation.Resource
 
 @Configuration
-@EnableConfigurationProperties(WxConfigProperties::class, WxPayConfigProperties::class)
+@EnableConfigurationProperties(WxConfigProperties::class)
 class WxAutoConfig {
-    private val logger = LoggerFactory.getLogger(WxAutoConfig::class.java)
 
     @Resource
     private lateinit var wxConfigProperties: WxConfigProperties
 
-    @Resource
-    private lateinit var wxPayConfigProperties: WxPayConfigProperties
+
 //
 //    @Bean
 //    @ConditionalOnMissingBean(Wx::class)
