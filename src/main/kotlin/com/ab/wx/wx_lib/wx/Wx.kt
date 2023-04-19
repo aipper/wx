@@ -9,10 +9,7 @@ import com.ab.wx.wx_lib.dto.qrcode.PermanentQrCodeDto
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
-import com.ab.wx.wx_lib.vo.wx.WxCreateMenuVo
-import com.ab.wx.wx_lib.vo.wx.WxGetUserInfoVo
-import com.ab.wx.wx_lib.vo.wx.WxQrCodeVo
-import com.ab.wx.wx_lib.vo.wx.WxTemplateVo
+import com.ab.wx.wx_lib.vo.wx.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
@@ -63,26 +60,57 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private fun getUserInfoUrl(token: String?, openId: String) =
         "https://api.weixin.qq.com/cgi-bin/user/info?access_token=${token}&openid=${openId}&lang=zh_CN"
 
+
+    /**
+     * h5获取用户accesstoken
+     */
+    private fun getH5AccessTokenUrl(code: String) =
+        "https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSec}&code=${code}&grant_type=authorization_code"
+
+    /**
+     * 获取h5用户
+     */
+    private fun getH5UserUrl(accessToken: String, openId: String) =
+//        "https://api.weixin.qq.com/sns/auth?access_token=${accessToken}&openid=${openId}"
+        "https://api.weixin.qq.com/sns/userinfo?access_token=${accessToken}&openid=${openId}&lang=zh_CN"
+
     /**
      * 获取token
      */
-    fun genToken() {
+    fun genToken(): String {
         val restTemplate = RestTemplate()
         val res = restTemplate.getForObject(getTokenUrl, WxToken::class.java)
+        logger.info("getToken:$res")
         res?.let {
             WxConst.accessToken = res.access_token
             getTicket(res.access_token)
+            return WxConst.accessToken
         }
+        return ""
+    }
+
+    fun setToken(token: String) {
+        WxConst.accessToken = token
     }
 
     fun getTicket(token: String?) {
         restTemplate.getForObject(getTicketUrl(token), WxTicket::class.java)?.let {
+            logger.info("获取ticket:${it.ticket}")
             WxConst.ticket = it.ticket
         }
     }
+    fun setTicket(ticket: String) {
+        WxConst.ticket = ticket
+    }
 
 
-    fun createSign(jsapi_ticket: String, url: String): HashMap<String, String> {
+    fun createSign(jsapiTicket: String, url: String): HashMap<String, String> {
+        var jsapi_ticket = jsapiTicket
+        if (jsapi_ticket.isNullOrBlank()) {
+            getTicket(WxConst.accessToken)
+            jsapi_ticket = WxConst.ticket
+        }
+        logger.info("creteSign:$jsapi_ticket")
         val map = hashMapOf<String, String>()
         val nonce_str = create_nonce_str()
         val timestamp = create_timestamp()
@@ -160,5 +188,28 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     fun getAppId(): String {
         return appId
+    }
+
+    /**
+     * 获取h5 用户 accesstoken
+     */
+    fun getH5UserAccessToken(code: String): WxH5AccessTokenVo? {
+        val accessTokenUrl = getH5AccessTokenUrl(code)
+        return restTemplate.getForObject(accessTokenUrl, WxH5AccessTokenVo::class.java)
+    }
+
+    fun getH5User(code: String): WxUserVo? {
+        var user: WxUserVo? = null
+        val accessToken = getH5UserAccessToken(code)
+        accessToken?.let {
+            logger.info("getH5User:$it")
+            val token = it.access_token
+            val openid = it.openid
+            restTemplate.getForObject(getH5UserUrl(token, openid), WxUserVo::class.java)?.let {
+                logger.info("getUser:$it")
+                user = it
+            }
+        }
+        return user
     }
 }
