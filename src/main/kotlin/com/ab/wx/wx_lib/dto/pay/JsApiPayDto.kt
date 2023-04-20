@@ -2,7 +2,7 @@ package com.ab.wx.wx_lib.dto.pay
 
 data class JsApiPayDto(
     val appid: String = "",
-    var mchid: String = "",
+    val mchid: String = "",
     val description: String = "",
     val out_trade_no: String = "",
     val time_expire: String? = null,

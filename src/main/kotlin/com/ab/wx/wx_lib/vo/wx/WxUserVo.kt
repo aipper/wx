@@ -23,7 +23,6 @@ data class WxUserVo(
     val headimgurl: String = "",
     val privilege: List<String> = arrayListOf(),
     val unionid: String = "",
-    val errcode: String =
-        "",
+    val errcode: String = "",
     val errmsg: String = ""
 )

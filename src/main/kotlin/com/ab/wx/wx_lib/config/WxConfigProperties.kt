@@ -2,6 +2,7 @@ package com.ab.wx.wx_lib.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
+
 @ConfigurationProperties(prefix = "wx")
 class WxConfigProperties {
 
@@ -15,5 +16,8 @@ class WxConfigProperties {
 
     lateinit var miniAppIdTwo: String
     lateinit var miniAppSecTwo: String
+
+
+    var pay: WxPayConfigProperties? = null
 
 }

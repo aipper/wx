@@ -171,9 +171,11 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     /**
      * 生成永久二维码的图形
      */
-    fun showQrCode(dto: PermanentQrCodeDto): String? {
+    fun showQrCode(dto: PermanentQrCodeDto): WxQrCodeUrlVo? {
         val qrCodeVo = genPermanentQrCode(dto)
-        return qrCodeVo?.ticket?.let { showQrCodeUrl(it) }
+        return qrCodeVo?.ticket?.let {
+            WxQrCodeUrlVo(url = qrCodeVo.url, showUrl = showQrCodeUrl(it))
+        }
     }
 
     /**
