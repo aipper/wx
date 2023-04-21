@@ -12,15 +12,18 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import java.io.BufferedReader
 import java.io.FileInputStream
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.URL
 import java.security.KeyFactory
 import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.Signature
+import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
+import java.util.stream.Collectors
 
 
 class WxPay(wxConfigProperties: WxConfigProperties) {
@@ -33,6 +36,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private val SCHEMA = "WECHATPAY2-SHA256-RSA2048"
     private val SIGN_METHOD = "SHA256withRSA"
+    private val UTF8 = "UTF-8"
 
     private val appId = wxConfigProperties.appId
 
@@ -44,21 +48,20 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private val h5PayUrl = "https://api.mch.weixin.qq.com/v3/pay/transactions/h5"
 
-    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
-        return """
-            $method
-            $url
-            $time
-            $nonceStr
-            $content
-            
-        """.trimIndent()
-    }
-
-//    private fun createSign(vararg components: String): String {
-////        logger.info("componetns:$components")
-////        return Arrays.stream(components).collect(Collectors.joining("\n", "", "\n"))
+//    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
+//        return """
+//            $method
+//            $url
+//            $time
+//            $nonceStr
+//            $content
+//
+//        """.trimIndent()
 //    }
+
+    private fun genPaySign(vararg components: String): String {
+        return Arrays.stream(components).collect(Collectors.joining("\n", "", "\n"))
+    }
 
     private fun loadPrivateKeyFromString(keyString: String): PrivateKey? {
         return try {
@@ -76,20 +79,24 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         var result: String = ""
         if (keyPath != null) {
             FileInputStream(keyPath).use {
-                InputStreamReader(it).use {
-                    BufferedReader(it).use {
-                        val stringBuilder = StringBuilder()
-                        var line: String? = it.readLine()
-                        while (line != null) {
-                            stringBuilder.append(line)
-                            line = it.readLine()
-                        }
-                        result = stringBuilder.toString()
-                    }
-                }
+                result = readIns(it)
             }
         }
         return result
+    }
+
+    private fun readIns(input: InputStream): String {
+        InputStreamReader(input).use {
+            BufferedReader(it).use {
+                val stringBuilder = StringBuilder()
+                var line: String? = it.readLine()
+                while (line != null) {
+                    stringBuilder.append(line)
+                    line = it.readLine()
+                }
+                return stringBuilder.toString()
+            }
+        }
     }
 
     private fun genPrivateKey(key: String) {
@@ -102,7 +109,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val processUrl = URL(url).path
         val message = genPaySign(method, processUrl, time, noticeStr, body)
         logger.info("message:$message")
-        val signature = sign(message.toByteArray(charset("UTF-8")))
+        val signature = sign(message.toByteArray(charset(UTF8)))
         return " mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
     }
 
@@ -137,8 +144,24 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return mapper.readValue(res, JsApiPayVo::class.java)
     }
 
-
-    fun genH5Pay() {
-
+    public fun verity(body: String, cert: X509Certificate, sign: String, serial: String): Boolean {
+        val no = cert.serialNumber.toString(16).uppercase()
+        if (no == serial) {
+            val rsa = Signature.getInstance(SIGN_METHOD)
+            rsa.initVerify(cert.publicKey)
+            rsa.update(body.toByteArray(charset(UTF8)))
+            return rsa.verify(Base64.getDecoder().decode(sign))
+        } else return false
     }
+
+//    fun callbackFn() {
+//        val timestamp = request.getHeader("wechatpay-timestamp")
+//        val nonce = request.getHeader("wechatpay-nonce")
+//        val signature = request.getHeader("wechatpay-signature")
+//        val serial = request.getHeader("Wechatpay-Serial")
+//
+//        val body = readIns(request.inputStream)
+//
+//
+//    }
 }
