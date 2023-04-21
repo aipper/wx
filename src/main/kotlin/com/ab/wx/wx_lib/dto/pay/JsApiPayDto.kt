@@ -11,7 +11,7 @@ data class JsApiPayDto(
     val goods_tag: String? = null,
     val support_fapiao: Boolean = false,
     val amount: JsApiPayAmountDto = JsApiPayAmountDto(),
-    val payer: JsApiPayerDto = JsApiPayerDto(),
+    val payer: JsApiPayerDto? = null,
     /**
      * 优惠功能
      */
@@ -24,7 +24,7 @@ data class JsApiPayDto(
     /**
      * 结算信息
      */
-    val settle_info: SettleInfoDto = SettleInfoDto()
+    val settle_info: SettleInfoDto? = null
 )
 
 data class JsApiPayAmountDto(

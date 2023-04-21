@@ -3,14 +3,21 @@ package com.ab.wx.wx_lib.fn
 import com.ab.wx.wx_lib.config.WxMappingJackson2HttpMessageConverter
 import com.ab.wx.wx_lib.const.BaseConst
 import com.ab.wx.wx_lib.const.R
+import com.ab.wx.wx_lib.exception.RestErrHandler
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpRequest
 import org.springframework.http.MediaType
+import org.springframework.http.client.SimpleClientHttpRequestFactory
+import org.springframework.http.converter.StringHttpMessageConverter
 import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 
+
+private val logger = LoggerFactory.getLogger("Fn")
 fun ok(data: Any? = null, code: Int = BaseConst.success, msg: String = ""): R {
     return R(code, msg, data)
 }
@@ -61,13 +68,24 @@ fun create_nonce_str(): String {
     return UUID.randomUUID().toString()
 }
 
+fun create_pay_nonce(): String {
+    return create_nonce_str().replace("-", "")
+}
+
 fun create_timestamp(): String {
     return "${System.currentTimeMillis() / 1000}"
 }
 
 fun getRestTemplate(): RestTemplate {
-    val res = RestTemplate()
+    val factory = SimpleClientHttpRequestFactory()
+    factory.setOutputStreaming(false)
+    val res = RestTemplate(factory)
+    val stringHttpMessageConverter = StringHttpMessageConverter()
+    stringHttpMessageConverter.supportedMediaTypes =
+        arrayListOf(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.TEXT_HTML)
     res.messageConverters.add(WxMappingJackson2HttpMessageConverter())
+    res.messageConverters.add(stringHttpMessageConverter)
+    res.errorHandler = RestErrHandler()
     return res
 }
 
@@ -79,12 +97,32 @@ fun getBase64Encoder(): Base64.Encoder {
 fun getBase64Decoder(): Base64.Decoder {
     return Base64.getDecoder()
 }
+
 fun getHeaders(): HttpHeaders {
     val header = HttpHeaders()
     header.contentType = MediaType.APPLICATION_JSON
+//    header.accept.add(MediaType.APPLICATION_JSON)
+    return header
+}
+
+fun getPayHeaders(token: String): HttpHeaders {
+    logger.info("token:$token")
+    val header = HttpHeaders()
+    header.contentType = MediaType.APPLICATION_JSON
+    header.accept = arrayListOf(MediaType.APPLICATION_JSON)
+//    header.accept.add(MediaType.APPLICATION_JSON)
+//    header.set("Authorization",token)
+    header.add("Authorization", token)
+    header.add("User-Agent", "ab-token")
     return header
 }
 
 fun readNotifyData(request: HttpServletRequest) {
 
+}
+
+fun getMapper(): ObjectMapper {
+    val mapper = ObjectMapper()
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    return mapper
 }

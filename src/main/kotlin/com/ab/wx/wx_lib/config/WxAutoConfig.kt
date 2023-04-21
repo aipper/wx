@@ -1,6 +1,5 @@
 package com.ab.wx.wx_lib.config
 
-import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import javax.annotation.Resource

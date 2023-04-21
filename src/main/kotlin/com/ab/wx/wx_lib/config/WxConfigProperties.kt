@@ -17,7 +17,7 @@ class WxConfigProperties {
     lateinit var miniAppIdTwo: String
     lateinit var miniAppSecTwo: String
 
-
+    @get:ConfigurationProperties(prefix = "wx.pay")
     var pay: WxPayConfigProperties? = null
 
 }
