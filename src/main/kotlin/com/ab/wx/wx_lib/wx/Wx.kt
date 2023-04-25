@@ -99,6 +99,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
             WxConst.ticket = it.ticket
         }
     }
+
     fun setTicket(ticket: String) {
         WxConst.ticket = ticket
     }
@@ -197,6 +198,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     fun getH5UserAccessToken(code: String): WxH5AccessTokenVo? {
         val accessTokenUrl = getH5AccessTokenUrl(code)
+        logger.info("accessTokenUrl:$accessTokenUrl")
         return restTemplate.getForObject(accessTokenUrl, WxH5AccessTokenVo::class.java)
     }
 
@@ -205,6 +207,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         val accessToken = getH5UserAccessToken(code)
         accessToken?.let {
             logger.info("getH5User:$it")
+            if (it.access_token.isBlank()) throw RuntimeException("获取accessToken失败:${it.errmsg}")
             val token = it.access_token
             val openid = it.openid
             restTemplate.getForObject(getH5UserUrl(token, openid), WxUserVo::class.java)?.let {

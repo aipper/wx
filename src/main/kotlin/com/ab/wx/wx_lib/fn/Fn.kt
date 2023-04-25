@@ -12,8 +12,13 @@ import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.converter.StringHttpMessageConverter
 import org.springframework.web.client.RestTemplate
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.security.MessageDigest
+import java.security.cert.CertificateFactory
 import java.util.*
+import java.util.stream.Collectors
 import javax.servlet.http.HttpServletRequest
 
 
@@ -113,7 +118,7 @@ fun getPayHeaders(token: String): HttpHeaders {
 //    header.accept.add(MediaType.APPLICATION_JSON)
 //    header.set("Authorization",token)
     header.add("Authorization", token)
-    header.add("User-Agent", "ab-token")
+    header.add("User-Agent", "Mozilla/5.0")
     return header
 }
 
@@ -125,4 +130,25 @@ fun getMapper(): ObjectMapper {
     val mapper = ObjectMapper()
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
     return mapper
+}
+
+fun readIns(input: InputStream): String {
+    InputStreamReader(input).use {
+        BufferedReader(it).use {
+            val stringBuilder = StringBuilder()
+            var line: String? = it.readLine()
+            while (line != null) {
+                stringBuilder.append(line)
+                line = it.readLine()
+            }
+            return stringBuilder.toString()
+        }
+    }
+}
+
+fun genPaySign(vararg components: String): String {
+    return Arrays.stream(components).collect(Collectors.joining("\n", "", "\n"))
+}
+
+fun genX509Cert() {
 }
