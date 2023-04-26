@@ -46,6 +46,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val restTemplate = getRestTemplate()
     private val mapper = getMapper()
 
+    private var x509Certificate: X509Certificate? = null
+
     /**
      * jsapi支付接口
      */
@@ -61,6 +63,9 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      * 获取平台证书
      */
     private val getCertsUrl = "https://api.mch.weixin.qq.com/v3/certificates"
+
+
+    private val refuseUrl = "https://api.mch.weixin.qq.com/v3/refund/domestic/refunds"
 
 
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
@@ -102,6 +107,17 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     }
 
+
+    //    private fun genFirstToken(method: String, url: String, body: String): String {
+//        val noticeStr = create_pay_nonce()
+//        val time = create_timestamp()
+//        val processUrl = URL(url).path
+//        val message = genPaySign(method, processUrl, time, noticeStr, body)
+//        logger.info("message:$message")
+//        val signature = sign(message.toByteArray(charset(UTF8)))
+//        return " mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
+//    }
+//
     fun genToken(method: String, url: String, body: String): String {
         val noticeStr = create_pay_nonce()
         val time = create_timestamp()
@@ -109,6 +125,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val message = genPaySign(method, processUrl, time, noticeStr, body)
         logger.info("message:$message")
         val signature = sign(message.toByteArray(charset(UTF8)))
+//        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
         return " mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
     }
 
@@ -118,6 +135,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         s.update(message)
         return Base64.getEncoder().encodeToString(s.sign())
     }
+
+//    private fun signWithAutoKey(message: ByteArray): String? {
+//        val s = Signature.getInstance(SIGN_METHOD)
+//        s.initVerify(x509Certificate)
+//
+//        s.update(message)
+//        return Base64.getEncoder().encodeToString(s.sign())
+//    }
 
     fun genSimplePay(dto: SimplePayDto, method: String): JsApiPayRes? {
         mchId?.let {
@@ -150,14 +175,17 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return null
     }
 
-    fun verity(body: String, cert: X509Certificate, sign: String, serial: String): Boolean {
-        val no = cert.serialNumber.toString(16).uppercase()
-        return if (no == serial) {
-            val rsa = Signature.getInstance(SIGN_METHOD)
-            rsa.initVerify(cert.publicKey)
-            rsa.update(body.toByteArray(charset(UTF8)))
-            rsa.verify(Base64.getDecoder().decode(sign))
-        } else false
+    fun verity(body: String, sign: String, serial: String): Boolean {
+        x509Certificate?.let {
+            val no = it.serialNumber.toString(16).uppercase()
+            return if (no == serial) {
+                val rsa = Signature.getInstance(SIGN_METHOD)
+                rsa.initVerify(it.publicKey)
+                rsa.update(body.toByteArray(charset(UTF8)))
+                rsa.verify(Base64.getDecoder().decode(sign))
+            } else false
+        }
+        return false
     }
 
     /**
@@ -167,6 +195,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val time = create_timestamp()
         val notifyCode = create_pay_nonce()
         val signType = sign(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
+//        val signType = signWithAutoKey(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
         return JsApiPayRes(
             prepayId = prepayId, timestamp = time, nonceStr = notifyCode, paySign = signType, orderId = orderNo
         )
@@ -205,14 +234,12 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             val encryptCert = it.encrypt_certificate
             val cf = CertificateFactory.getInstance("X509")
             val res = WxPayAes.decryptToString(
-                encryptCert.associated_data.toByteArray(charset(UTF8)),
-                encryptCert.nonce.toByteArray(charset(UTF8)),
-                encryptCert.ciphertext,
-                apiV3Key.toByteArray(charset(UTF8))
+                encryptCert.associated_data, encryptCert.nonce, encryptCert.ciphertext, apiV3Key
             )
             val cert: X509Certificate =
                 cf.generateCertificate(ByteArrayInputStream(res?.toByteArray(charset(UTF8)))) as X509Certificate
             cert.checkValidity()
+            x509Certificate = cert
             return cert
         }
         return null
