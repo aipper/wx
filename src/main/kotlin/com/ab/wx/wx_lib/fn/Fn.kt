@@ -19,7 +19,6 @@ import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.util.*
 import java.util.stream.Collectors
-import javax.servlet.http.HttpServletRequest
 
 
 private val logger = LoggerFactory.getLogger("Fn")
@@ -122,9 +121,7 @@ fun getPayHeaders(token: String): HttpHeaders {
     return header
 }
 
-fun readNotifyData(request: HttpServletRequest) {
 
-}
 
 fun getMapper(): ObjectMapper {
     val mapper = ObjectMapper()

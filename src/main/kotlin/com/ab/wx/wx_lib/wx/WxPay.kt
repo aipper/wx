@@ -7,10 +7,8 @@ import com.ab.wx.wx_lib.dto.pay.JsApiPayerDto
 import com.ab.wx.wx_lib.dto.pay.SimplePayDto
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.fn.aes.WxPayAes
-import com.ab.wx.wx_lib.vo.pay.JsApiPayRes
-import com.ab.wx.wx_lib.vo.pay.JsApiPayVo
-import com.ab.wx.wx_lib.vo.pay.PayCert
-import com.ab.wx.wx_lib.vo.pay.PayCertResVo
+import com.ab.wx.wx_lib.vo.pay.*
+import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -201,16 +199,20 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         )
     }
 
-    //    fun callbackFn() {
-//        val timestamp = request.getHeader("wechatpay-timestamp")
-//        val nonce = request.getHeader("wechatpay-nonce")
-//        val signature = request.getHeader("wechatpay-signature")
-//        val serial = request.getHeader("Wechatpay-Serial")
-//
-//        val body = readIns(request.inputStream)
-//
-//
-//    }
+    fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? {
+        val timestamp = request.getHeader("wechatpay-timestamp")
+        val nonce = request.getHeader("wechatpay-nonce")
+        val signature = request.getHeader("wechatpay-signature")
+        val serial = request.getHeader("Wechatpay-Serial")
+
+        val body = readIns(request.inputStream)
+        val wxPayRes = getMapper().readValue(body, H5PayVo::class.java)
+         val decodeStr = WxPayAes.decryptToString(
+            wxPayRes.resource.associated_data, wxPayRes.resource.nonce, wxPayRes.resource.ciphertext, apiV3Key
+        )
+        return getMapper().readValue(decodeStr, H5PayDecodeVo::class.java)
+    }
+
     /**
      * 获取证书
      */
