@@ -152,6 +152,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         return restTemplate.postForObject(templateUrl(WxConst.accessToken), entity, WxTemplateVo::class.java)
     }
 
+    fun getSendTemplateUrl(): String {
+        return templateUrl(WxConst.accessToken)
+    }
 
     /**
      * 生成永久二维码
