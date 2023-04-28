@@ -1,10 +1,7 @@
 package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
-import com.ab.wx.wx_lib.dto.pay.JsApiPayAmountDto
-import com.ab.wx.wx_lib.dto.pay.JsApiPayDto
-import com.ab.wx.wx_lib.dto.pay.JsApiPayerDto
-import com.ab.wx.wx_lib.dto.pay.SimplePayDto
+import com.ab.wx.wx_lib.dto.pay.*
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.fn.aes.WxPayAes
 import com.ab.wx.wx_lib.vo.pay.*
@@ -30,6 +27,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val logger = LoggerFactory.getLogger(WxPay::class.java)
     private val mchId = wxConfigProperties.pay?.mchid
     private val notifyUrl = wxConfigProperties.pay?.notifyUrl
+    private val refundsNotifyUrl = wxConfigProperties.pay?.refundsNotifyUrl
 
     //    private val v3key = wxConfigProperties.pay?.v3key
     private val keyPath = wxConfigProperties.pay?.keyPath
@@ -124,7 +122,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         logger.info("message:$message")
         val signature = sign(message.toByteArray(charset(UTF8)))
 //        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
-        return " mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
+        return "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
     }
 
     private fun sign(message: ByteArray): String? {
@@ -160,7 +158,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private fun genJsApiPay(dto: JsApiPayDto, method: String, orderNo: String): JsApiPayRes? {
         val json = mapper.writeValueAsString(dto)
-        val header = getPayHeaders(SCHEMA + genToken(method, jsApiPayUrl, json))
+        val header = getPayHeaders(genToken(method, jsApiPayUrl, json))
         val entity = HttpEntity(json, header)
 //        val res = restTemplate.exchange(jsApiPayUrl, HttpMethod.POST, entity, String::class.java).body
 //        val
@@ -199,7 +197,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         )
     }
 
-    fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? {
+    private fun decodeCallback(request: HttpServletRequest, apiV3Key: String): String? {
         val timestamp = request.getHeader("wechatpay-timestamp")
         val nonce = request.getHeader("wechatpay-nonce")
         val signature = request.getHeader("wechatpay-signature")
@@ -207,17 +205,26 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
         val body = readIns(request.inputStream)
         val wxPayRes = getMapper().readValue(body, H5PayVo::class.java)
-         val decodeStr = WxPayAes.decryptToString(
+        return WxPayAes.decryptToString(
             wxPayRes.resource.associated_data, wxPayRes.resource.nonce, wxPayRes.resource.ciphertext, apiV3Key
         )
+    }
+
+    fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? {
+        val decodeStr = decodeCallback(request, apiV3Key)
         return getMapper().readValue(decodeStr, H5PayDecodeVo::class.java)
+    }
+
+    fun refundsCallbackFn(request: HttpServletRequest, apiV3Key: String): H5RefundsDecodeVo? {
+        val decodeStr = decodeCallback(request, apiV3Key)
+        return getMapper().readValue(decodeStr, H5RefundsDecodeVo::class.java)
     }
 
     /**
      * 获取证书
      */
     private fun genCert(): PayCertResVo? {
-        val header = getPayHeaders(SCHEMA + genToken("GET", getCertsUrl, ""))
+        val header = getPayHeaders(genToken("GET", getCertsUrl, ""))
         logger.info("header:$header")
         val entity = HttpEntity("", header)
         return restTemplate.exchange(getCertsUrl, HttpMethod.GET, entity, PayCertResVo::class.java).body
@@ -247,5 +254,20 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return null
     }
 
+    fun simpleRefunds(dto: SimpleRefundsDto): String? {
+        return refunds(
+            RefundPayDto(
+                out_refund_no = dto.refundsOrderId, out_trade_no = dto.orderId, amount = RefundsAmount(
+                    refund = dto.refundsMoney, total = dto.totalMoney
+                ), notify_url = refundsNotifyUrl
+            )
+        )
+    }
 
+    private fun refunds(refundPayDto: RefundPayDto): String? {
+        val json = mapper.writeValueAsString(refundPayDto)
+        val header = getPayHeaders(genToken("POST", refuseUrl, json))
+        val entity = HttpEntity(json, header)
+        return restTemplate.postForObject(refuseUrl, entity, String::class.java)
+    }
 }
