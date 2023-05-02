@@ -5,6 +5,7 @@ data class WxSendTemplateDto(
      * 接收用户的openid
      */
     val touser: String = "",
+    val url:String="",
     val template_id: String = "",
     val topcolor: String = "",
     val data: Any? = null

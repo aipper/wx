@@ -147,7 +147,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
 
 
     fun sendTemplate(dto: WxSendTemplateDto): WxTemplateVo? {
-        val entity = HttpEntity(dto)
+        val entity = HttpEntity(dto, getHeaders())
         logger.info("sendTemplate:$entity")
         return restTemplate.postForObject(templateUrl(WxConst.accessToken), entity, WxTemplateVo::class.java)
     }

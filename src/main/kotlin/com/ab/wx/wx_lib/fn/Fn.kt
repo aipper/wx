@@ -105,6 +105,7 @@ fun getBase64Decoder(): Base64.Decoder {
 fun getHeaders(): HttpHeaders {
     val header = HttpHeaders()
     header.contentType = MediaType.APPLICATION_JSON
+    header.accept = arrayListOf(MediaType.APPLICATION_JSON)
 //    header.accept.add(MediaType.APPLICATION_JSON)
     return header
 }
