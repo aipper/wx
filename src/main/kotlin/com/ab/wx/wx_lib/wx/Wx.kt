@@ -107,7 +107,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
 
     fun createSign(jsapiTicket: String, url: String): HashMap<String, String> {
         var jsapi_ticket = jsapiTicket
-        if (jsapi_ticket.isNullOrBlank()) {
+        if (jsapi_ticket.isBlank()) {
             getTicket(WxConst.accessToken)
             jsapi_ticket = WxConst.ticket
         }

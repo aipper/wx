@@ -18,18 +18,31 @@ package com.ab.wx.wx_lib.vo.pay
  *     }
  * }
  */
+/**
+ *  at [Source: (String)"{"mchid":"1638537256",
+ *  "out_trade_no":"1654026214064640002",
+ *  "transaction_id":"4200001840202305046776453156",
+ *  "out_refund_no":"1654045066335981570",
+ *  "refund_id":"50302405472023050434079463166",
+ *  "refund_status":"SUCCESS","
+ *  success_time":"2023-05-04T16:47:37+08:00",
+ *  "amount":{"total":2,"refund":1,"payer_total":2,"payer_refund":1},
+ *  "user_received_account":"交通银行信用卡9558"}"; line: 1, column: 2]
+ *
+ */
+
 data class H5RefundsDecodeVo(
-    val mchid: String,
-    val transaction_id: String,
-    val out_trade_no: String,
-    val refund_id: String,
-    val out_refund_no: String,
-    val refund_status: String,
-    val success_time: String,
-    val user_received_account: String,
-    val amount: DecodeAmountVo,
+    val mchid: String = "",
+    val transaction_id: String = "",
+    val out_trade_no: String = "",
+    val refund_id: String = "",
+    val out_refund_no: String = "",
+    val refund_status: String = "",
+    val success_time: String = "",
+    val user_received_account: String = "",
+    val amount: DecodeAmountVo = DecodeAmountVo(),
 )
 
 data class DecodeAmountVo(
-    val total: Int, val refund: Int, val payer_total: Int, val payer_refund: Int
+    val total: Int = 0, val refund: Int = 0, val payer_total: Int = 0, val payer_refund: Int = 0
 )
