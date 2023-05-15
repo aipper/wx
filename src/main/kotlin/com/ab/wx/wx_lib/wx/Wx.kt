@@ -179,7 +179,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     fun showQrCode(dto: PermanentQrCodeDto): WxQrCodeUrlVo? {
         val qrCodeVo = genPermanentQrCode(dto)
         return qrCodeVo?.ticket?.let {
-            WxQrCodeUrlVo(url = qrCodeVo.url, showUrl = showQrCodeUrl(it))
+            WxQrCodeUrlVo(url = qrCodeVo.url, showUrl = showQrCodeUrl(it), ticket = it)
         }
     }
 
