@@ -270,4 +270,15 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val entity = HttpEntity(json, header)
         return restTemplate.postForObject(refuseUrl, entity, String::class.java)
     }
+
+    fun refundsWithPromotion(dto: RefundsWithPromotionDto): String? {
+        return refunds(
+            RefundPayDto(
+                out_refund_no = dto.refundsOrderId, out_trade_no = dto.orderId, amount = RefundsAmount(
+                    refund = dto.refundsMoney, total = dto.totalMoney,
+                ), notify_url = refundsNotifyUrl,
+            )
+        )
+    }
+
 }

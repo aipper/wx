@@ -63,7 +63,11 @@ data class RefundPayDto(
     /**
      * 商品信息
      */
-    val goods_detail: List<RefundsGoods>? = null
+    val goods_detail: List<RefundsGoods>? = null,
+//    /**
+//     * 优惠退款
+//     */
+//    val promotion_detail: List<RefundsPromotion> = arrayListOf()
 )
 
 data class RefundsAmount(

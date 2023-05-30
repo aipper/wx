@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.ab.wx</groupId>
     <artifactId>wx_lib</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <name>wx_lib</name>
     <description>wx_lib</description>
     <properties>
@@ -111,7 +111,7 @@
     <distributionManagement>
         <repository>
             <id>zczx</id>
-            <url>http://nexus.dev.hubeis.cn:7002/repository/zczx/</url>
+            <url>https://nexus.dev.hubeis.cn/repository/zczx/</url>
         </repository>
     </distributionManagement>
 </project>

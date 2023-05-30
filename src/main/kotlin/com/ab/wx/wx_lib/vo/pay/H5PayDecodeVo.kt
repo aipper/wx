@@ -1,7 +1,6 @@
 package com.ab.wx.wx_lib.vo.pay
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * {"mchid":"1638537256","appid":"wxdbbf793c5db4adf6",
@@ -24,14 +23,56 @@ data class H5PayDecodeVo(
     val attach: String = "",
     val success_time: String = "",
     val payer: Payer = Payer(),
-    val amount: Amount = Amount()
+    val amount: Amount = Amount(),
+    val promotion_detail: List<PromotionDetail> = arrayListOf()
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PromotionDetail(
+    /**
+     * 券id
+     */
+    val coupon_id: String = "",
+    /**
+     * 券名称
+     */
+    val name: String? = null,
+    /**
+     * 优惠范围
+     */
+    val scope: String? = null,
+    /**
+     * 优惠类型
+     */
+    val type: String? = null,
+    /**
+     * 面额
+     */
+    val amount: Int = 0,
+    /**
+     * 活动id
+     */
+    val stock_id: String? = null,
+    /**
+     * 微信出资
+     */
+    val wechatpay_contribute: Int? = null,
+    /**
+     * 商户出资
+     */
+    val merchant_contribute: Int? = null,
+    /**
+     * 其他出资
+     */
+    val other_contribute: Int? = null,
+    /**
+     * 优惠币总
+     */
+    val currency: String = ""
 )
 
 data class Amount(
-    val total: Int = 0,
-    val payer_total: Int = 0,
-    val currency: String = "",
-    val payer_currency: String = ""
+    val total: Int = 0, val payer_total: Int = 0, val currency: String = "", val payer_currency: String = ""
 )
 
 data class Payer(
