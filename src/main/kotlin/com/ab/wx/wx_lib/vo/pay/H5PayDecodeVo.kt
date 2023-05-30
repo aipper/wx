@@ -1,5 +1,6 @@
 package com.ab.wx.wx_lib.vo.pay
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * "payer":{"openid":"ouxTn5g5nfRWcK4RV8y050dVhWXY"},"
  * amount":{"total":1,"payer_total":1,"currency":"CNY","payer_currency":"CNY"}}
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class H5PayDecodeVo(
     val mchid: String = "",
     val appid: String = "",
@@ -23,7 +25,6 @@ data class H5PayDecodeVo(
     val success_time: String = "",
     val payer: Payer = Payer(),
     val amount: Amount = Amount()
-
 )
 
 data class Amount(
