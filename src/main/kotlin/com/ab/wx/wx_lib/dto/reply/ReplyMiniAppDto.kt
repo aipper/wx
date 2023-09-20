@@ -10,7 +10,7 @@ data class ReplyMiniAppDto(
     @JacksonXmlProperty(localName = "miniprogrampage") val miniprogrampage: MINIPROGRAMPAGE = MINIPROGRAMPAGE(),
 ) {
     @JacksonXmlProperty(localName = "MsgType")
-    val msgType: String = MsgTypeEnums.MINIPROGRAMPAGE.code
+    val msgtype: String = MsgTypeEnums.MINIPROGRAMPAGE.code
 }
 
 data class MINIPROGRAMPAGE(

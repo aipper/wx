@@ -237,6 +237,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
                 title = title, appid = miniAppId, pagepath = pagepath, thumb_media_id = thumb_media_id
             )
         )
+        logger.info("发送客户消息:$dto")
         val entity = HttpEntity(dto, getHeaders())
         restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
             logger.info("发送客服消息回复:$it")
