@@ -6,6 +6,8 @@ import com.ab.wx.wx_lib.dto.WxCreateMenuDto
 import com.ab.wx.wx_lib.dto.WxSendTemplateDto
 import com.ab.wx.wx_lib.dto.qrcode.ExpiredQrCodeDto
 import com.ab.wx.wx_lib.dto.qrcode.PermanentQrCodeDto
+import com.ab.wx.wx_lib.dto.reply.MINIPROGRAMPAGE
+import com.ab.wx.wx_lib.dto.reply.ReplyMiniAppDto
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
@@ -21,6 +23,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private val logger = LoggerFactory.getLogger(Wx::class.java)
     private val appId = wxConfigProperties.appId
     private val appSec = wxConfigProperties.appSec
+    private val miniAppId = wxConfigProperties.miniAppId
     private val wxToken = wxConfigProperties.wxToken
     private var callbackUrl = ""
     private val restTemplate = getRestTemplate()
@@ -73,6 +76,12 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private fun getH5UserUrl(accessToken: String, openId: String) =
 //        "https://api.weixin.qq.com/sns/auth?access_token=${accessToken}&openid=${openId}"
         "https://api.weixin.qq.com/sns/userinfo?access_token=${accessToken}&openid=${openId}&lang=zh_CN"
+
+    /**
+     * 发送客服消息
+     */
+    private fun sendCustomerMsg(accessToken: String) =
+        "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=$accessToken"
 
     /**
      * 获取token
@@ -220,5 +229,17 @@ class Wx(wxConfigProperties: WxConfigProperties) {
             }
         }
         return user
+    }
+
+    fun sendMiniAppMsg(touser: String, title: String, pagepath: String, thumb_media_id: String) {
+        val dto = ReplyMiniAppDto(
+            touser = touser, miniprogrampage = MINIPROGRAMPAGE(
+                title = title, appid = miniAppId, pagepath = pagepath, thumb_media_id = thumb_media_id
+            )
+        )
+        val entity = HttpEntity(dto, getHeaders())
+        restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
+            logger.info("发送客服消息回复:$it")
+        }
     }
 }
