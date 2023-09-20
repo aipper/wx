@@ -246,7 +246,7 @@ fun replyMiniapp(dto: ReplyMiniAppDto): String {
     return """
         <xml>
           <touser>${dto.touser}</touser>
-          <MsgType>${dto.msgType}</MsgType>
+          <MsgType>${dto.msgtype}</MsgType>
           <miniprogrampage>
             <title>${dto.miniprogrampage.title}</title>
             <appid>${dto.miniprogrampage.appid}</appid>
