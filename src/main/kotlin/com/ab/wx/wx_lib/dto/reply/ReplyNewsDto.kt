@@ -2,7 +2,6 @@ package com.ab.wx.wx_lib.dto.reply
 
 import com.ab.wx.wx_lib.enums.MsgTypeEnums
 import com.ab.wx.wx_lib.fn.getNowStr
-import com.ab.wx.wx_lib.fn.getXmlMapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 
@@ -20,6 +19,7 @@ data class ReplyNewsDto(
     @JacksonXmlProperty(localName = "MsgType")
     val msgType: String = MsgTypeEnums.NEWS.code
 }
+
 
 
 data class NewsItem(

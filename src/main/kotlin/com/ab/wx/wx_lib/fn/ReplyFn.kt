@@ -239,6 +239,24 @@ fun replyNewsMsg(dto: ReplyNewsDto): String? {
     """.trimIndent()
 }
 
+/**
+ * 回复小程序
+ */
+fun replyMiniapp(dto: ReplyMiniAppDto): String {
+    return """
+        <xml>
+          <touser>${dto.touser}</touser>
+          <MsgType>${dto.msgType}</MsgType>
+          <miniprogrampage>
+            <title>${dto.miniprogrampage.title}</title>
+            <appid>${dto.miniprogrampage.appid}</appid>
+            <pagepath>${dto.miniprogrampage.pagepath}</pagepath>
+            <thumb_media_id>${dto.miniprogrampage.thumb_media_id}</thumb_media_id>
+          </miniprogrampage>
+        </xml>
+    """.trimIndent()
+}
+
 private fun genNewsItem(items: List<NewsItem>): String {
     val sb = StringBuffer()
     items.forEach {
