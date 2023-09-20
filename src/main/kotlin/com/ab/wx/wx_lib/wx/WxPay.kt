@@ -5,7 +5,6 @@ import com.ab.wx.wx_lib.dto.pay.*
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.fn.aes.WxPayAes
 import com.ab.wx.wx_lib.vo.pay.*
-import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -21,6 +20,7 @@ import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
+import javax.servlet.http.HttpServletRequest
 
 
 class WxPay(wxConfigProperties: WxConfigProperties) {

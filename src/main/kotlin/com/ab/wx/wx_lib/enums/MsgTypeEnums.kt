@@ -11,5 +11,6 @@ enum class MsgTypeEnums(val code: String, val desc: String) {
     VOICE("voice", "语音消息"), IMAGE("image", "图片消息"), TEXT(
         "text", "文本消息"
     ),
-    EVENT("event", "事件推送"),MUSIC("music","音乐消息"), NEWS("news","图文消息")
+    EVENT("event", "事件推送"),MUSIC("music","音乐消息"), NEWS("news","图文消息"),
+    MINIPROGRAMPAGE("miniprogrampage","小程序")
 }

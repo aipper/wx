@@ -1,8 +1,8 @@
 package com.ab.wx.wx_lib.config
 
-import jakarta.annotation.Resource
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
+import javax.annotation.Resource
 
 @Configuration
 @EnableConfigurationProperties(WxConfigProperties::class)
