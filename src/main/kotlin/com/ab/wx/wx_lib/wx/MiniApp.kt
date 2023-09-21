@@ -1,20 +1,16 @@
 package com.ab.wx.wx_lib.wx
 
-import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
 import com.ab.wx.wx_lib.fn.getRestTemplate
+import com.ab.wx.wx_lib.fn.logger
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
 import com.ab.wx.wx_lib.vo.miniapp.Code2SessionVo
-import com.ab.wx.wx_lib.vo.miniapp.PhoneNumberVo
-import org.slf4j.LoggerFactory
-import org.springframework.http.HttpEntity
 import org.springframework.web.client.RestTemplate
 
-class MiniApp(val miniAppId: String,val  miniAppSec: String) {
-    private val logger = LoggerFactory.getLogger(MiniApp::class.java)
+class MiniApp(val miniAppId: String, val miniAppSec: String) {
     private val restTemplate: RestTemplate = getRestTemplate()
-    private var accessToken:String=""
+    private var accessToken: String = ""
 
     fun getCode2Session(code: String): Code2SessionVo? {
         val code2sessionUrl = """
@@ -31,8 +27,11 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
             https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${miniAppId}&secret=$miniAppSec
         """.trimIndent()
         val res = restTemplate.getForObject(url, AppAccessTokenVo::class.java)
+        logger("请求小程序接口凭证:$url")
         res?.let {
             accessToken = res.access_token
+            WxConst.miniAppToken = res.access_token
+            logger("获取小程序token为:${WxConst.miniAppToken}")
             return accessToken
         }
         return ""
@@ -42,7 +41,7 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
      *  获取生成的accessToken
      */
     fun getAccessToken(): String {
-       return WxConst.accessToken
+        return WxConst.accessToken
     }
 
     /**
@@ -61,7 +60,6 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
             https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${WxConst.miniAppToken}
         """.trimIndent()
     }
-
 
 
 }
