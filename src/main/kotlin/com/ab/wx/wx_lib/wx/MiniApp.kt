@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
+import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
 import com.ab.wx.wx_lib.fn.getRestTemplate
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
@@ -41,14 +42,15 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
      *  获取生成的accessToken
      */
     fun getAccessToken(): String {
-       return accessToken
+       return WxConst.accessToken
     }
 
     /**
      * 设置accessToken
      */
     fun setAccessToken(token: String) {
-        this.accessToken = token
+//        this.accessToken = token
+        WxConst.miniAppToken = token
     }
 
     /**
@@ -56,7 +58,7 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
      */
     fun uniformMsgSend(dto: AppUniformMsgSendDto) {
         val url = """
-            https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${accessToken}
+            https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${WxConst.miniAppToken}
         """.trimIndent()
     }
 
@@ -65,7 +67,7 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
      */
     fun getPhoneNumber(code: String): PhoneNumberVo? {
         val url = """
-            https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}
+            https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${WxConst.miniAppToken}
         """.trimIndent()
         val map = hashMapOf<String, String>()
         map["code"] = code

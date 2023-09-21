@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.6</version>
+        <version>3.1.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.ab.wx</groupId>
     <artifactId>wx_lib</artifactId>
-    <version>1.0.10</version>
+    <version>1.0.11</version>
     <name>wx_lib</name>
     <description>wx_lib</description>
     <properties>

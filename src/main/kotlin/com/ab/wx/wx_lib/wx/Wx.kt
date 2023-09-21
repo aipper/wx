@@ -12,7 +12,6 @@ import com.ab.wx.wx_lib.dto.reply.ReplyMiniAppDto
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
-import com.ab.wx.wx_lib.vo.miniapp.CheckUserPhoneVo
 import com.ab.wx.wx_lib.vo.wx.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -85,12 +84,6 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private fun sendCustomerMsg(accessToken: String) =
         "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=$accessToken"
 
-
-    /**
-     * 手机号快速验证
-     */
-    private fun checkUserPhone(accessToken: String) =
-        "https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}"
 
 
     /**
@@ -257,11 +250,4 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         }
     }
 
-    /**
-     * 验证手机号方法
-     */
-    fun checkUserMobileFn(code: String): CheckUserPhoneVo? {
-        val entity = HttpEntity(CheckUserPhoneDto(code), getHeaders())
-        return restTemplate.postForObject(checkUserPhone(WxConst.accessToken), entity, CheckUserPhoneVo::class.java)
-    }
 }
