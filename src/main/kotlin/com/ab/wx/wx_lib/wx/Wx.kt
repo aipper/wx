@@ -4,6 +4,7 @@ import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.dto.WxCreateMenuDto
 import com.ab.wx.wx_lib.dto.WxSendTemplateDto
+import com.ab.wx.wx_lib.dto.miniapp.CheckUserPhoneDto
 import com.ab.wx.wx_lib.dto.qrcode.ExpiredQrCodeDto
 import com.ab.wx.wx_lib.dto.qrcode.PermanentQrCodeDto
 import com.ab.wx.wx_lib.dto.reply.MINIPROGRAMPAGE
@@ -11,6 +12,7 @@ import com.ab.wx.wx_lib.dto.reply.ReplyMiniAppDto
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
+import com.ab.wx.wx_lib.vo.miniapp.CheckUserPhoneVo
 import com.ab.wx.wx_lib.vo.wx.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -82,6 +84,14 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     private fun sendCustomerMsg(accessToken: String) =
         "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=$accessToken"
+
+
+    /**
+     * 手机号快速验证
+     */
+    private fun checkUserPhone(accessToken: String) =
+        "https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}"
+
 
     /**
      * 获取token
@@ -231,6 +241,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         return user
     }
 
+    /**
+     * 发送小程序消息
+     */
     fun sendMiniAppMsg(touser: String, title: String, pagepath: String, thumb_media_id: String) {
         val dto = ReplyMiniAppDto(
             touser = touser, miniprogrampage = MINIPROGRAMPAGE(
@@ -242,5 +255,13 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
             logger.info("发送客服消息回复:$it")
         }
+    }
+
+    /**
+     * 验证手机号方法
+     */
+    fun checkUserMobileFn(code: String): CheckUserPhoneVo? {
+        val entity = HttpEntity(CheckUserPhoneDto(code), getHeaders())
+        return restTemplate.postForObject(checkUserPhone(WxConst.accessToken), entity, CheckUserPhoneVo::class.java)
     }
 }
