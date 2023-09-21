@@ -62,22 +62,6 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
         """.trimIndent()
     }
 
-    /**
-     * 获取手机号
-     */
-    fun getPhoneNumber(code: String): PhoneNumberVo? {
-        val url = """
-            https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${WxConst.miniAppToken}
-        """.trimIndent()
-        val map = hashMapOf<String, String>()
-        map["code"] = code
-        val entity = HttpEntity(map)
-        val res = restTemplate.postForObject(url, entity, PhoneNumberVo::class.java)
-        logger.info("res:$res")
-        return res
-    }
 
-    fun setExpireTime(string: String) {
 
-    }
 }

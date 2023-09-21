@@ -1,0 +1,114 @@
+{
+  "groups": [
+    {
+      "name": "wx",
+      "type": "com.ab.wx.wx_lib.config.WxConfigProperties",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.pay",
+      "type": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties",
+      "sourceMethod": "getPay()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "wx.aes-key",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.app-id",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.app-sec",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.mini-app-id",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.mini-app-id-two",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.mini-app-sec",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.mini-app-sec-two",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.pay",
+      "type": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.pay.key-path",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "wx.pay.mchid",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties"
+    },
+    {
+      "name": "wx.pay.notify-url",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties"
+    },
+    {
+      "name": "wx.pay.refunds-notify-url",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties"
+    },
+    {
+      "name": "wx.pay.serial-no",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "wx.pay.v3key",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties"
+    },
+    {
+      "name": "wx.wx-token",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    },
+    {
+      "name": "wx.debug",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"
+    }
+  ],
+  "hints": [
+    {
+      "name": "wx.debug",
+      "values": [
+        {
+          "value": true,
+          "description": "启用日志"
+        },
+        {
+          "value": false,
+          "description": "关闭日志"
+        }
+      ]
+    }
+  ]
+}

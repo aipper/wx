@@ -5,4 +5,7 @@ object WxConst {
     var ticket: String = ""
 
     var miniAppToken: String = ""
+
+    var debug: Boolean = false
+
 }

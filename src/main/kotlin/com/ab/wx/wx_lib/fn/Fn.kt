@@ -3,6 +3,7 @@ package com.ab.wx.wx_lib.fn
 import com.ab.wx.wx_lib.config.WxMappingJackson2HttpMessageConverter
 import com.ab.wx.wx_lib.const.BaseConst
 import com.ab.wx.wx_lib.const.R
+import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.exception.RestErrHandler
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,7 +17,6 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.security.MessageDigest
-import java.security.cert.CertificateFactory
 import java.util.*
 import java.util.stream.Collectors
 
@@ -123,7 +123,6 @@ fun getPayHeaders(token: String): HttpHeaders {
 }
 
 
-
 fun getMapper(): ObjectMapper {
     val mapper = ObjectMapper()
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
@@ -149,4 +148,11 @@ fun genPaySign(vararg components: String): String {
 }
 
 fun genX509Cert() {
+}
+
+
+fun logger(msg: String) {
+    if (WxConst.debug) {
+        logger.info(msg)
+    }
 }

@@ -26,9 +26,11 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private val appSec = wxConfigProperties.appSec
     private val miniAppId = wxConfigProperties.miniAppId
     private val wxToken = wxConfigProperties.wxToken
-    private var callbackUrl = ""
     private val restTemplate = getRestTemplate()
-    private val mapper = ObjectMapper()
+
+    init {
+        WxConst.debug = wxConfigProperties.debug
+    }
 
     private val getTokenUrl =
         "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSec}"
@@ -83,7 +85,6 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     private fun sendCustomerMsg(accessToken: String) =
         "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=$accessToken"
-
 
 
     /**

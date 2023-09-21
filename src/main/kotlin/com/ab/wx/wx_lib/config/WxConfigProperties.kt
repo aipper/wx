@@ -11,6 +11,8 @@ class WxConfigProperties {
     lateinit var miniAppId: String
     lateinit var miniAppSec: String
     lateinit var wxToken: String
+    var debug: Boolean = false
+
     var aesKey: String? = null
 
 
