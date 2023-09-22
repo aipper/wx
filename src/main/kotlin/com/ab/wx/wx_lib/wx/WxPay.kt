@@ -159,12 +159,12 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                 amount = JsApiPayAmountDto(total = dto.amount),
                 payer = JsApiPayerDto(dto.payOpenid)
             )
-            return genJsApiPay(payDto, method, dto.orderNo)
+            return genJsApiPay(payDto, method, dto.orderNo, appId)
         }
         return null
     }
 
-    private fun genJsApiPay(dto: JsApiPayDto, method: String, orderNo: String): JsApiPayRes? {
+    private fun genJsApiPay(dto: JsApiPayDto, method: String, orderNo: String, appId: String): JsApiPayRes? {
         val json = mapper.writeValueAsString(dto)
         val header = getPayHeaders(genToken(method, jsApiPayUrl, json))
         val entity = HttpEntity(json, header)
@@ -174,7 +174,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val res = restTemplate.postForObject(jsApiPayUrl, entity, HashMap::class.java)
         logger("调用微信支付:$res")
         res?.let {
-            return genJsSign("${it["prepay_id"]}", orderNo)
+            return genJsSign("${it["prepay_id"]}", orderNo, appId)
         }
         return null
     }
@@ -195,7 +195,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     /**
      * 生成前端的sign
      */
-    private fun genJsSign(prepayId: String, orderNo: String): JsApiPayRes {
+    private fun genJsSign(prepayId: String, orderNo: String, appId: String): JsApiPayRes {
         val time = create_timestamp()
         val notifyCode = create_pay_nonce()
         val signType = sign(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())

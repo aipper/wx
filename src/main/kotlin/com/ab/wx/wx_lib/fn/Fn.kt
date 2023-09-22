@@ -144,6 +144,7 @@ fun readIns(input: InputStream): String {
 }
 
 fun genPaySign(vararg components: String): String {
+    logger("components:$components")
     return Arrays.stream(components).collect(Collectors.joining("\n", "", "\n"))
 }
 
