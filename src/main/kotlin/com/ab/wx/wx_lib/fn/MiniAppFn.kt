@@ -33,5 +33,6 @@ fun subscriptMsg(dto: MiniappMsgDto): java.util.HashMap<*, *>? {
             https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${WxConst.miniAppToken}
         """.trimIndent()
     val entity = HttpEntity(dto, getHeaders())
+    logger("subscriptMsg:$dto")
     return restTemplate.postForObject(url, entity, HashMap::class.java)
 }
