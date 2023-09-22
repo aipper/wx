@@ -2,10 +2,13 @@ package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
+import com.ab.wx.wx_lib.dto.miniapp.MiniappMsgDto
+import com.ab.wx.wx_lib.fn.getHeaders
 import com.ab.wx.wx_lib.fn.getRestTemplate
 import com.ab.wx.wx_lib.fn.logger
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
 import com.ab.wx.wx_lib.vo.miniapp.Code2SessionVo
+import org.springframework.http.HttpEntity
 import org.springframework.web.client.RestTemplate
 
 class MiniApp(val miniAppId: String, val miniAppSec: String) {
@@ -60,6 +63,7 @@ class MiniApp(val miniAppId: String, val miniAppSec: String) {
             https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${WxConst.miniAppToken}
         """.trimIndent()
     }
+
 
 
 }
