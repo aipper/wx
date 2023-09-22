@@ -171,10 +171,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 //        val res = restTemplate.exchange(jsApiPayUrl, HttpMethod.POST, entity, String::class.java).body
 //        val
 //        r mapper.readValue(res, JsApiPayVo::class.java)
-        val res = restTemplate.postForObject(jsApiPayUrl, entity, JsApiPayVo::class.java)
+        val res = restTemplate.postForObject(jsApiPayUrl, entity, HashMap::class.java)
         logger("调用微信支付:$res")
         res?.let {
-            return genJsSign(it.prepay_id, orderNo)
+            return genJsSign("${it["prepay_id"]}", orderNo)
         }
         return null
     }
