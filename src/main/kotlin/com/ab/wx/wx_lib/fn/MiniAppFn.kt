@@ -18,7 +18,7 @@ fun getPhoneNumber(code: String): PhoneNumberVo? {
     val map = hashMapOf<String, String>()
     map["code"] = code
     logger("获取手机号url:${url}")
-    val entity = HttpEntity(map)
+    val entity = HttpEntity(map, getHeaders())
     val res = restTemplate.postForObject(url, entity, PhoneNumberVo::class.java)
     logger("获取手机号结果:${res}")
     return res
