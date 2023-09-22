@@ -6,7 +6,6 @@ import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.fn.aes.WxPayAes
 import com.ab.wx.wx_lib.vo.pay.*
 import jakarta.servlet.http.HttpServletRequest
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import java.io.ByteArrayInputStream
@@ -24,7 +23,6 @@ import java.util.*
 
 
 class WxPay(wxConfigProperties: WxConfigProperties) {
-    private val logger = LoggerFactory.getLogger(WxPay::class.java)
     private val mchId = wxConfigProperties.pay?.mchid
     private val notifyUrl = wxConfigProperties.pay?.notifyUrl
     private val refundsNotifyUrl = wxConfigProperties.pay?.refundsNotifyUrl
@@ -38,6 +36,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val UTF8 = "UTF-8"
 
     private val appId = wxConfigProperties.appId
+
+    private val miniAppId = wxConfigProperties.miniAppId
 
     private val restTemplate = getRestTemplate()
     private val mapper = getMapper()
@@ -119,7 +119,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val time = create_timestamp()
         val processUrl = URL(url).path
         val message = genPaySign(method, processUrl, time, noticeStr, body)
-        logger.info("message:$message")
+        logger("message:$message")
         val signature = sign(message.toByteArray(charset(UTF8)))
 //        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
         return "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
@@ -141,6 +141,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 //    }
 
     fun genSimplePay(dto: SimplePayDto, method: String): JsApiPayRes? {
+        return payFn(dto, method, appId)
+    }
+
+    fun genMiniAppPay(dto: SimplePayDto, method: String): JsApiPayRes? {
+        return payFn(dto, method, miniAppId)
+    }
+
+    private fun payFn(dto: SimplePayDto, method: String, appId: String): JsApiPayRes? {
         mchId?.let {
             val payDto = JsApiPayDto(
                 appid = appId,
@@ -164,7 +172,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 //        val
 //        r mapper.readValue(res, JsApiPayVo::class.java)
         val res = restTemplate.postForObject(jsApiPayUrl, entity, JsApiPayVo::class.java)
-        logger.info("调用微信支付:$res")
+        logger("调用微信支付:$res")
         res?.let {
             return genJsSign(it.prepay_id, orderNo)
         }
@@ -225,7 +233,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      */
     private fun genCert(): PayCertResVo? {
         val header = getPayHeaders(genToken("GET", getCertsUrl, ""))
-        logger.info("header:$header")
+        logger("header:$header")
         val entity = HttpEntity("", header)
         return restTemplate.exchange(getCertsUrl, HttpMethod.GET, entity, PayCertResVo::class.java).body
     }
@@ -274,9 +282,11 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun refundsWithPromotion(dto: RefundsWithPromotionDto): String? {
         return refunds(
             RefundPayDto(
-                out_refund_no = dto.refundsOrderId, out_trade_no = dto.orderId, amount = RefundsAmount(
+                out_refund_no = dto.refundsOrderId, out_trade_no = dto.orderId,
+                amount = RefundsAmount(
                     refund = dto.refundsMoney, total = dto.totalMoney,
-                ), notify_url = refundsNotifyUrl,
+                ),
+                notify_url = refundsNotifyUrl,
             )
         )
     }
