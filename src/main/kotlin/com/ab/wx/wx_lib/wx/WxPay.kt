@@ -7,7 +7,9 @@ import com.ab.wx.wx_lib.fn.aes.WxPayAes
 import com.ab.wx.wx_lib.vo.pay.*
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
 import java.net.URL
@@ -63,6 +65,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private val refuseUrl = "https://api.mch.weixin.qq.com/v3/refund/domestic/refunds"
 
+    /**
+     * 商户转账
+     */
+    private val transferUrl = "https://api.mch.weixin.qq.com/v3/transfer/batches"
 
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
 //        return """
@@ -75,6 +81,16 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 //        """.trimIndent()
 //    }
 
+
+    fun transfer(dto: TransPayDto): TransferVo? {
+        val header = HttpHeaders()
+        header.accept = listOf(MediaType.APPLICATION_JSON)
+        header.contentType = MediaType.APPLICATION_JSON
+        header.add("Authorization", genToken("POST", transferUrl, mapper.writeValueAsString(dto)))
+        header.add("Wechatpay-Serial", serialNo)
+        val entity = HttpEntity<TransPayDto>(dto, header)
+        return restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
+    }
 
     private fun loadPrivateKeyFromString(keyString: String): PrivateKey? {
         return try {
