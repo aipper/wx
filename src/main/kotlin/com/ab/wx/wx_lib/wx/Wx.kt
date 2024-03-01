@@ -86,6 +86,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private fun sendCustomerMsg(accessToken: String) =
         "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=$accessToken"
 
+    /**
+     * 分账
+     */
 
     /**
      * 获取token
