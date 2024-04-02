@@ -111,7 +111,7 @@ fun getHeaders(): HttpHeaders {
 }
 
 fun getPayHeaders(token: String): HttpHeaders {
-    logger.info("token:$token")
+//    logger.info("token:$token")
     val header = HttpHeaders()
     header.contentType = MediaType.APPLICATION_JSON
     header.accept = arrayListOf(MediaType.APPLICATION_JSON)
@@ -144,7 +144,7 @@ fun readIns(input: InputStream): String {
 }
 
 fun genPaySign(vararg components: String): String {
-    logger("components:$components")
+//    logger("components:$components")
     return Arrays.stream(components).collect(Collectors.joining("\n", "", "\n"))
 }
 

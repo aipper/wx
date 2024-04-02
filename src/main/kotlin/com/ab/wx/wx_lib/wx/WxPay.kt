@@ -7,9 +7,7 @@ import com.ab.wx.wx_lib.fn.aes.WxPayAes
 import com.ab.wx.wx_lib.vo.pay.*
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
 import java.net.URL
@@ -22,16 +20,20 @@ import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
+import javax.crypto.Cipher
 
 
 class WxPay(wxConfigProperties: WxConfigProperties) {
     private val mchId = wxConfigProperties.pay?.mchid
     private val notifyUrl = wxConfigProperties.pay?.notifyUrl
     private val refundsNotifyUrl = wxConfigProperties.pay?.refundsNotifyUrl
+    private val transCallbackUrl = wxConfigProperties.pay?.transCallbackUrl
 
     //    private val v3key = wxConfigProperties.pay?.v3key
     private val keyPath = wxConfigProperties.pay?.keyPath
     private val serialNo = wxConfigProperties.pay?.serialNo
+
+    private val v3Key = wxConfigProperties.pay?.v3key
 
     private val SCHEMA = "WECHATPAY2-SHA256-RSA2048"
     private val SIGN_METHOD = "SHA256withRSA"
@@ -45,6 +47,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val mapper = getMapper()
 
     private var x509Certificate: X509Certificate? = null
+    private var payCert: PayCert? = null
 
     /**
      * jsapi支付接口
@@ -83,14 +86,29 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
 
     fun transfer(dto: TransPayDto): TransferVo? {
-        val header = HttpHeaders()
-        header.accept = listOf(MediaType.APPLICATION_JSON)
-        header.contentType = MediaType.APPLICATION_JSON
-        header.add("Authorization", genToken("POST", transferUrl, mapper.writeValueAsString(dto)))
-        header.add("Wechatpay-Serial", serialNo)
-        val entity = HttpEntity<TransPayDto>(dto, header)
-        return restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
+        v3Key?.let { v3 ->
+            val json = mapper.writeValueAsString(
+                dto.copy(
+                    appid = miniAppId, transfer_detail_list = dto.transfer_detail_list.map {
+                        it.copy(
+                            user_name = encodeSensitive(
+                                it.user_name, autoGenCert(apiV3Key = v3)
+                            )
+                        )
+                    }, notify_url = transCallbackUrl
+                )
+            )
+            val header = getPayHeaders(genToken("POST", transferUrl, json))
+            logger("pay:$payCert")
+            header.add("Wechatpay-Serial", payCert?.serial_no)
+            val entity = HttpEntity(json, header)
+            val res = restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
+            logger("transer res :$res")
+            return res
+        }
+        return null
     }
+
 
     private fun loadPrivateKeyFromString(keyString: String): PrivateKey? {
         return try {
@@ -135,10 +153,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val time = create_timestamp()
         val processUrl = URL(url).path
         val message = genPaySign(method, processUrl, time, noticeStr, body)
-        logger("message:$message")
+//        logger("message:$message")
         val signature = sign(message.toByteArray(charset(UTF8)))
 //        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
-        return "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
+        val res =
+            "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
+        logger("token res:$res")
+        return res
     }
 
     private fun sign(message: ByteArray): String? {
@@ -263,6 +284,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     fun autoGenCert(apiV3Key: String): X509Certificate? {
         val lastCert = getLastCert()
+        payCert = lastCert
         lastCert?.let {
             val encryptCert = it.encrypt_certificate
             val cf = CertificateFactory.getInstance("X509")
@@ -272,6 +294,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             val cert: X509Certificate =
                 cf.generateCertificate(ByteArrayInputStream(res?.toByteArray(charset(UTF8)))) as X509Certificate
             cert.checkValidity()
+
             x509Certificate = cert
             return cert
         }
@@ -305,6 +328,16 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                 notify_url = refundsNotifyUrl,
             )
         )
+    }
+
+    /**
+     * 加密敏感信息
+     */
+    fun encodeSensitive(msg: String?, certificate: X509Certificate?): String? {
+        val instance = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding")
+        instance.init(Cipher.ENCRYPT_MODE, certificate?.publicKey)
+        val message = msg?.toByteArray()
+        return Base64.getEncoder().encodeToString(instance.doFinal(message))
     }
 
 }

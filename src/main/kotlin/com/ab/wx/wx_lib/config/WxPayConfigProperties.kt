@@ -8,4 +8,5 @@ class WxPayConfigProperties {
     var v3key: String? = null
     var keyPath: String = ""
     var serialNo: String = ""
+    var transCallbackUrl: String? = null
 }
