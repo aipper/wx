@@ -1,5 +1,8 @@
 package com.ab.wx.wx_lib.vo.pay
 
+import com.ab.wx.wx_lib.enums.TransMoneyStatusEnums
+import com.ab.wx.wx_lib.fn.getMapper
+
 /**
  * {
  *     "mchid": "1900000100",
@@ -67,7 +70,7 @@ data class DecodeAmountVo(
 data class TransferCallbackVo(
     val out_batch_no: String = "",
     val batch_id: String = "",
-    val batch_status: String = "",
+    val batch_status: TransMoneyStatusEnums = TransMoneyStatusEnums.ACCEPTED,
     val total_num: Int = 0,
     val total_amount: Int = 0,
     val success_amount: Int = 0,
