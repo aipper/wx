@@ -46,3 +46,34 @@ data class H5RefundsDecodeVo(
 data class DecodeAmountVo(
     val total: Int = 0, val refund: Int = 0, val payer_total: Int = 0, val payer_refund: Int = 0
 )
+
+
+/**
+ * {
+ *     "out_batch_no": "bfatestnotify000033",
+ *     "batch_id": "131000007026709999520922023081519403795655",
+ *     "batch_status": "FINISHED",
+ *     "total_num": 2,
+ *     "total_amount": 200,
+ *     "success_amount": 100,
+ *     "success_num": 1,
+ *     "fail_amount": 100,
+ *     "fail_num": 1,
+ *     "mchid": "2483775951",
+ *     "update_time": "2023-08-15T20:33:22+08:00"
+ * }
+ * 微信转账零钱
+ */
+data class TransferCallbackVo(
+    val out_batch_no: String = "",
+    val batch_id: String = "",
+    val batch_status: String = "",
+    val total_num: Int = 0,
+    val total_amount: Int = 0,
+    val success_amount: Int = 0,
+    val success_num: Int = 0,
+    val fail_amount: Int = 0,
+    val fail_num: Int = 0,
+    val mchid: String = "",
+    val update_time: String = ""
+)

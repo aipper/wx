@@ -255,14 +255,28 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         )
     }
 
+    /**
+     * 支付回调
+     */
     fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? {
         val decodeStr = decodeCallback(request, apiV3Key)
         return getMapper().readValue(decodeStr, H5PayDecodeVo::class.java)
     }
 
+    /**
+     * 退款回调
+     */
     fun refundsCallbackFn(request: HttpServletRequest, apiV3Key: String): H5RefundsDecodeVo? {
         val decodeStr = decodeCallback(request, apiV3Key)
         return getMapper().readValue(decodeStr, H5RefundsDecodeVo::class.java)
+    }
+
+    /**
+     * 微信转账零钱回调
+     */
+    fun transCallbackFn(request: HttpServletRequest, apiV3Key: String): TransferCallbackVo? {
+        val decodeStr = decodeCallback(request, apiV3Key)
+        return getMapper().readValue(decodeStr, TransferCallbackVo::class.java)
     }
 
     /**
@@ -301,6 +315,9 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return null
     }
 
+    /**
+     * 简易退款
+     */
     fun simpleRefunds(dto: SimpleRefundsDto): String? {
         return refunds(
             RefundPayDto(
