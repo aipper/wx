@@ -4,7 +4,7 @@ import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.dto.WxCreateMenuDto
 import com.ab.wx.wx_lib.dto.WxSendTemplateDto
-import com.ab.wx.wx_lib.dto.miniapp.CheckUserPhoneDto
+import com.ab.wx.wx_lib.dto.WxUploadMaterialDto
 import com.ab.wx.wx_lib.dto.qrcode.ExpiredQrCodeDto
 import com.ab.wx.wx_lib.dto.qrcode.PermanentQrCodeDto
 import com.ab.wx.wx_lib.dto.reply.MINIPROGRAMPAGE
@@ -12,10 +12,15 @@ import com.ab.wx.wx_lib.dto.reply.ReplyMiniAppDto
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.WxTicket
 import com.ab.wx.wx_lib.vo.WxToken
+import com.ab.wx.wx_lib.vo.WxUploadMaterialVo
 import com.ab.wx.wx_lib.vo.wx.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
 import java.security.MessageDigest
 import java.util.*
@@ -85,6 +90,13 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     private fun sendCustomerMsg(accessToken: String) =
         "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=$accessToken"
+
+    /**
+     * 上传永久
+     */
+    private fun uploadMaterialUrl(accessToken: String) =
+        "https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${accessToken}"
+
 
     /**
      * 分账
@@ -252,6 +264,28 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
             logger.info("发送客服消息回复:$it")
         }
+    }
+
+    /**
+     * 上传图片获取media_id
+     */
+    fun uploadMaterial(dto: WxUploadMaterialDto): WxUploadMaterialVo? {
+        val headers: HttpHeaders = HttpHeaders()
+        headers.contentType = MediaType.MULTIPART_FORM_DATA
+        val params = LinkedMultiValueMap<String, Any>()
+        params["media"] = FileSystemResource(dto.file)
+        val entity = HttpEntity(params, headers)
+        val res = restTemplate.postForObject(uploadMaterialUrl(WxConst.accessToken), entity, String::class.java)
+        res?.let {
+            if (res.contains("err")) {
+                logger.error("上传素材失败:$res")
+            } else {
+                val vo = ObjectMapper().readValue(res, WxUploadMaterialVo::class.java)
+                logger.info("上传素材成功:$vo")
+                return vo
+            }
+        }
+        return null
     }
 
 }

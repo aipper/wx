@@ -1,4 +1,6 @@
 package com.ab.wx.wx_lib.vo
 
-class WxUploadMaterialVo {
-}
+data class WxUploadMaterialVo(
+    val media_id: String = "", val url: String = "",
+    val item: Any? = null
+)

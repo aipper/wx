@@ -1,12 +1,16 @@
 package com.ab.wx.wx_lib.dto
 
+import java.io.File
+
 
 /**
  * 素材上传
  */
 
-data class WxUploadImageDto(
-    val upload_type:Int = 1,
-    val resp_type:Int = 0,
-
+data class WxUploadMaterialDto(
+    val file: File, val type: String = WxUploadMaterialType.IMAGE.type
 )
+
+enum class WxUploadMaterialType(val type: String) {
+    IMAGE("image"), VOICE("voice"), VIDEO("video"), THUMB("thumb")
+}
