@@ -128,7 +128,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             FileInputStream(keyPath).use {
                 result = readIns(it)
             }
+        }else{
+            logger("getLastCert:${getLastCert()}")
         }
+        logger("genPrivateKeyWithPath:$result")
         return result
     }
 
