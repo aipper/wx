@@ -124,12 +124,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private fun genPrivateKeyWithPath(): String {
         var result: String = ""
-        if (keyPath != null) {
+        logger("keyPath:${keyPath.isNullOrBlank()}")
+        if (keyPath.isNullOrBlank()) {
+            logger("getLastCert:${getLastCert()}")
+        } else {
             FileInputStream(keyPath).use {
                 result = readIns(it)
             }
-        }else{
-            logger("getLastCert:${getLastCert()}")
         }
         logger("genPrivateKeyWithPath:$result")
         return result
@@ -167,7 +168,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private fun sign(message: ByteArray): String? {
         val s = Signature.getInstance(SIGN_METHOD)
-        s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
+        if (x509Certificate == null) {
+            s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
+            v3Key?.let {
+                x509Certificate = autoGenCert(it)
+            }
+        } else {
+            s.initVerify(x509Certificate)
+        }
         s.update(message)
         return Base64.getEncoder().encodeToString(s.sign())
     }
