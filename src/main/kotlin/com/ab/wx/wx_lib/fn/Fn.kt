@@ -1,5 +1,7 @@
 package com.ab.wx.wx_lib.fn
 
+import com.ab.wx.wx_lib.*
+import com.ab.wx.wx_lib.config.ContentLengthInterceptor
 import com.ab.wx.wx_lib.config.WxMappingJackson2HttpMessageConverter
 import com.ab.wx.wx_lib.const.BaseConst
 import com.ab.wx.wx_lib.const.R
@@ -10,8 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.converter.StringHttpMessageConverter
+import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
 import java.io.BufferedReader
 import java.io.InputStream
@@ -81,16 +83,22 @@ fun create_timestamp(): String {
 }
 
 fun getRestTemplate(): RestTemplate {
-    val factory = SimpleClientHttpRequestFactory()
-    factory.setOutputStreaming(false)
-    val res = RestTemplate(factory)
+//    val factory = SimpleClientHttpRequestFactory()
+//    factory.setOutputStreaming(false)
+    val res = RestTemplate()
     val stringHttpMessageConverter = StringHttpMessageConverter()
     stringHttpMessageConverter.supportedMediaTypes =
         arrayListOf(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.TEXT_HTML)
     res.messageConverters.add(WxMappingJackson2HttpMessageConverter())
     res.messageConverters.add(stringHttpMessageConverter)
     res.errorHandler = RestErrHandler()
+    res.interceptors = listOf(ContentLengthInterceptor())
     return res
+}
+
+fun getRestClient(): RestClient {
+    val create = RestClient.create()
+    return create
 }
 
 
@@ -109,6 +117,13 @@ fun getHeaders(): HttpHeaders {
 //    header.accept.add(MediaType.APPLICATION_JSON)
     return header
 }
+
+fun getHeaders(body: Any): HttpHeaders {
+    val header = getHeaders()
+    header.contentLength = getMapper().writeValueAsBytes(body).size.toLong()
+    return header
+}
+
 
 fun getPayHeaders(token: String): HttpHeaders {
 //    logger.info("token:$token")
