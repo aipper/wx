@@ -20,9 +20,14 @@ fun getPhoneNumber(code: String): PhoneNumberVo? {
     map["code"] = code
     logger("获取手机号url:${url}")
     val entity = HttpEntity(map, getHeaders())
-    val res = restTemplate.postForObject(url, entity, PhoneNumberVo::class.java)
+    val res = restTemplate.postForObject(url, entity, String::class.java)
     logger("获取手机号结果:${res}")
-    return res
+    if (res != null) {
+        val result = getMapper().readValue(res, PhoneNumberVo::class.java)
+        return result
+    } else {
+        return null
+    }
 }
 
 /**
