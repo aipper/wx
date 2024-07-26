@@ -21,6 +21,7 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
+import kotlin.math.sign
 
 
 class WxPay(wxConfigProperties: WxConfigProperties) {
@@ -152,13 +153,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 //        return " mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
 //    }
 //
-    fun genToken(method: String, url: String, body: String): String {
+    fun genToken(method: String, url: String, body: String, initFlag: Boolean = false): String {
         val noticeStr = create_pay_nonce()
         val time = create_timestamp()
         val processUrl = URL(url).path
         val message = genPaySign(method, processUrl, time, noticeStr, body)
 //        logger("message:$message")
-        val signature = sign(message.toByteArray(charset(UTF8)))
+        val signature = sign(message.toByteArray(charset(UTF8)), initFlag)
 //        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
         val res =
             "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
@@ -166,16 +167,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return res
     }
 
-    private fun sign(message: ByteArray): String? {
+    private fun sign(message: ByteArray, initFlag: Boolean = false): String? {
         val s = Signature.getInstance(SIGN_METHOD)
-        if (x509Certificate == null) {
             s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
-            v3Key?.let {
-                x509Certificate = autoGenCert(it)
-            }
-        } else {
-            s.initVerify(x509Certificate)
-        }
+//            s.initVerify(x509Certificate)
         s.update(message)
         return Base64.getEncoder().encodeToString(s.sign())
     }
