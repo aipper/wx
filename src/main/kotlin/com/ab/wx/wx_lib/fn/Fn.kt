@@ -12,6 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.http.client.BufferingClientHttpRequestFactory
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.converter.StringHttpMessageConverter
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
@@ -83,16 +86,14 @@ fun create_timestamp(): String {
 }
 
 fun getRestTemplate(): RestTemplate {
-//    val factory = SimpleClientHttpRequestFactory()
-//    factory.setOutputStreaming(false)
-    val res = RestTemplate()
+    val res = RestTemplate(BufferingClientHttpRequestFactory(SimpleClientHttpRequestFactory()))
     val stringHttpMessageConverter = StringHttpMessageConverter()
     stringHttpMessageConverter.supportedMediaTypes =
         arrayListOf(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.TEXT_HTML)
     res.messageConverters.add(WxMappingJackson2HttpMessageConverter())
     res.messageConverters.add(stringHttpMessageConverter)
     res.errorHandler = RestErrHandler()
-    res.interceptors = listOf(ContentLengthInterceptor())
+//    res.interceptors = listOf(ContentLengthInterceptor())
     return res
 }
 

@@ -169,7 +169,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private fun sign(message: ByteArray, initFlag: Boolean = false): String? {
         val s = Signature.getInstance(SIGN_METHOD)
-            s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
+        s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
 //            s.initVerify(x509Certificate)
         s.update(message)
         return Base64.getEncoder().encodeToString(s.sign())
