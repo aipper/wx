@@ -45,6 +45,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val miniAppId = wxConfigProperties.miniAppId
 
     private val restTemplate = getRestTemplate()
+//    private val restClient = getRestClient()
     private val mapper = getMapper()
 
     private var x509Certificate: X509Certificate? = null

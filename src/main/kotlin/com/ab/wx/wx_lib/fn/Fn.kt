@@ -85,6 +85,7 @@ fun create_timestamp(): String {
     return "${System.currentTimeMillis() / 1000}"
 }
 
+@Deprecated("过期使用 restClient")
 fun getRestTemplate(): RestTemplate {
     val res = RestTemplate(BufferingClientHttpRequestFactory(SimpleClientHttpRequestFactory()))
     val stringHttpMessageConverter = StringHttpMessageConverter()
@@ -101,6 +102,7 @@ fun getRestClient(): RestClient {
     val create = RestClient.create()
     return create
 }
+
 
 
 fun getBase64Encoder(): Base64.Encoder {
