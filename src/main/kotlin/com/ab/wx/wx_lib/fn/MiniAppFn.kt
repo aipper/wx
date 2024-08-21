@@ -9,7 +9,9 @@ import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
 
 
-internal val restTemplate: RestTemplate = getRestTemplate()
+//internal val restTemplate: RestTemplate = getRestTemplate()
+internal val restClient = getRestClient()
+
 
 /**
  * 获取手机号
@@ -21,16 +23,18 @@ fun getPhoneNumber(code: String): PhoneNumberVo? {
         """.trimIndent()
     val map = hashMapOf<String, String>()
     map["code"] = code
-    logger("获取手机号url:${url}")
-    val entity = HttpEntity(map, getHeaders(map))
-    val res = restTemplate.postForObject(url, entity, String::class.java)
-    logger("获取手机号结果String:${res}")
-    if (res != null) {
-        val result = getMapper().readValue(res, PhoneNumberVo::class.java)
-        return result
-    } else {
-        return null
-    }
+//    logger("获取手机号url:${url}")
+//    val entity = HttpEntity(map, getHeaders(map))
+//    val res = restTemplate.postForObject(url, entity, String::class.java)
+//    logger("获取手机号结果String:${res}")
+//    if (res != null) {
+//        val result = getMapper().readValue(res, PhoneNumberVo::class.java)
+//        return result
+//    } else {
+//        return null
+//    }
+    return restClient.post().uri(url).body(map).contentType(MediaType.APPLICATION_JSON).retrieve()
+        .toEntity(PhoneNumberVo::class.java).body
 
 }
 
@@ -43,5 +47,7 @@ fun subscriptMsg(dto: MiniappMsgDto): java.util.HashMap<*, *>? {
         """.trimIndent()
     val entity = HttpEntity(dto, getHeaders())
     logger("subscriptMsg:$dto")
-    return restTemplate.postForObject(url, entity, HashMap::class.java)
+//    return restTemplate.postForObject(url, entity, HashMap::class.java)
+    return restClient.post().uri(url).body(dto).contentType(MediaType.APPLICATION_JSON).retrieve()
+        .toEntity(java.util.HashMap::class.java).body
 }

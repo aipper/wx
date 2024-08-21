@@ -99,10 +99,9 @@ fun getRestTemplate(): RestTemplate {
 }
 
 fun getRestClient(): RestClient {
-    val create = RestClient.create()
-    return create
+    return RestClient.builder().defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+        .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE).build()
 }
-
 
 
 fun getBase64Encoder(): Base64.Encoder {

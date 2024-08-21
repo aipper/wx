@@ -8,6 +8,8 @@ import com.ab.wx.wx_lib.vo.pay.*
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
+import org.springframework.web.client.toEntity
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
 import java.net.URL
@@ -21,6 +23,7 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
+import kotlin.collections.HashMap
 import kotlin.math.sign
 
 
@@ -44,8 +47,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private val miniAppId = wxConfigProperties.miniAppId
 
-    private val restTemplate = getRestTemplate()
-//    private val restClient = getRestClient()
+    //    private val restTemplate = getRestTemplate()
+    private val restClient = getRestClient()
     private val mapper = getMapper()
 
     private var x509Certificate: X509Certificate? = null
@@ -104,7 +107,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             logger("pay:$payCert")
             header.add("Wechatpay-Serial", payCert?.serial_no)
             val entity = HttpEntity(json, header)
-            val res = restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
+//            val res = restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
+            val res = restClient.post().uri(transferUrl).headers {
+                    it.addAll(header)
+                }.contentType(MediaType.APPLICATION_JSON).body(json).retrieve().toEntity<TransferVo>().body
             logger("transer res :$res")
             return res
         }
@@ -215,7 +221,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 //        val res = restTemplate.exchange(jsApiPayUrl, HttpMethod.POST, entity, String::class.java).body
 //        val
 //        r mapper.readValue(res, JsApiPayVo::class.java)
-        val res = restTemplate.postForObject(jsApiPayUrl, entity, HashMap::class.java)
+//        val res = restTemplate.postForObject(jsApiPayUrl, entity, HashMap::class.java)
+        val res =
+            restClient.post().uri(jsApiPayUrl).headers { it.addAll(header) }.contentType(MediaType.APPLICATION_JSON)
+                .body(json).retrieve().toEntity(HashMap::class.java).body
         logger("调用微信支付:$res")
         res?.let {
             return genJsSign("${it["prepay_id"]}", orderNo, appId)
@@ -293,7 +302,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val header = getPayHeaders(genToken("GET", getCertsUrl, ""))
         logger("header:$header")
         val entity = HttpEntity("", header)
-        return restTemplate.exchange(getCertsUrl, HttpMethod.GET, entity, PayCertResVo::class.java).body
+//        return restTemplate.exchange(getCertsUrl, HttpMethod.GET, entity, PayCertResVo::class.java).body
+        return restClient.get().uri(getCertsUrl).headers { h ->
+            h.addAll(header)
+        }.retrieve().toEntity(PayCertResVo::class.java).body
     }
 
     fun getLastCert(): PayCert? {
@@ -339,7 +351,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val json = mapper.writeValueAsString(refundPayDto)
         val header = getPayHeaders(genToken("POST", refuseUrl, json))
         val entity = HttpEntity(json, header)
-        return restTemplate.postForObject(refuseUrl, entity, String::class.java)
+//        return restTemplate.postForObject(refuseUrl, entity, String::class.java)
+        return restClient.post().uri(refuseUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity<String>().body
     }
 
     fun refundsWithPromotion(dto: RefundsWithPromotionDto): String? {

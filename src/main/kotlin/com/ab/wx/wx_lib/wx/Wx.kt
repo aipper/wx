@@ -22,8 +22,10 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.toEntity
 import java.security.MessageDigest
 import java.util.*
+import kotlin.collections.HashMap
 
 class Wx(wxConfigProperties: WxConfigProperties) {
     private val logger = LoggerFactory.getLogger(Wx::class.java)
@@ -31,7 +33,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     private val appSec = wxConfigProperties.appSec
     private val miniAppId = wxConfigProperties.miniAppId
     private val wxToken = wxConfigProperties.wxToken
-    private val restTemplate = getRestTemplate()
+//    private val restTemplate = getRestTemplate()
 
     init {
         WxConst.debug = wxConfigProperties.debug
@@ -122,10 +124,15 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     }
 
     fun getTicket(token: String?) {
-        restTemplate.getForObject(getTicketUrl(token), WxTicket::class.java)?.let {
-            logger.info("获取ticket:${it.ticket}")
-            WxConst.ticket = it.ticket
-        }
+//        restTemplate.getForObject(getTicketUrl(token), WxTicket::class.java)?.let {
+//            logger.info("获取ticket:${it.ticket}")
+//            WxConst.ticket = it.ticket
+//        }
+        restClient.get().uri(getTicketUrl(token)).accept(MediaType.APPLICATION_JSON).retrieve()
+            .body(WxTicket::class.java)?.let {
+                logger.info("获取 ticket:${it.ticket}")
+                WxConst.ticket = it.ticket
+            }
     }
 
     fun setTicket(ticket: String) {
@@ -169,15 +176,20 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     }
 
     fun createMenu(dto: WxCreateMenuDto): WxCreateMenuVo? {
-        val entity = HttpEntity<WxCreateMenuDto>(dto, getHeaders())
-        return restTemplate.postForObject(createMenuUrl(WxConst.accessToken), entity, WxCreateMenuVo::class.java)
+//        val entity = HttpEntity<WxCreateMenuDto>(dto, getHeaders())
+//        return restTemplate.postForObject(createMenuUrl(WxConst.accessToken), entity, WxCreateMenuVo::class.java)
+        return restClient.post().uri(createMenuUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON)
+            .body(dto).retrieve().toEntity(WxCreateMenuVo::class.java).body
     }
 
 
     fun sendTemplate(dto: WxSendTemplateDto): WxTemplateVo? {
-        val entity = HttpEntity(dto, getHeaders())
-        logger.info("sendTemplate:$entity")
-        return restTemplate.postForObject(templateUrl(WxConst.accessToken), entity, WxTemplateVo::class.java)
+//        val entity = HttpEntity(dto, getHeaders())
+//        logger.info("sendTemplate:$entity")
+//        return restTemplate.postForObject(templateUrl(WxConst.accessToken), entity, WxTemplateVo::class.java)
+        return restClient.post().uri(templateUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON).body(dto)
+            .retrieve().toEntity<WxTemplateVo>().body
+
     }
 
     fun getSendTemplateUrl(): String {
@@ -190,7 +202,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     fun genPermanentQrCode(dto: PermanentQrCodeDto): WxQrCodeVo? {
         val entity = HttpEntity(dto, getHeaders())
         logger.info("qrCodeUrl:${qrCodeUrl(WxConst.accessToken)}")
-        return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
+//        return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
+        return restClient.post().uri(qrCodeUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON).body(dto)
+            .retrieve().toEntity<WxQrCodeVo>().body
     }
 
     /**
@@ -198,7 +212,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     fun genExpiredQrCode(dto: ExpiredQrCodeDto): WxQrCodeVo? {
         val entity = HttpEntity<ExpiredQrCodeDto>(dto, getHeaders())
-        return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
+//        return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
+        return restClient.post().uri(qrCodeUrl(WxConst.accessToken)).body(dto).contentType(MediaType.APPLICATION_JSON)
+            .retrieve().toEntity<WxQrCodeVo>().body
     }
 
     /**
@@ -215,7 +231,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      * 获取用户信息
      */
     fun getUserInfo(openId: String): WxGetUserInfoVo? {
-        return restTemplate.getForObject(getUserInfoUrl(WxConst.accessToken, openId), WxGetUserInfoVo::class.java)
+//        return restTemplate.getForObject(getUserInfoUrl(WxConst.accessToken, openId), WxGetUserInfoVo::class.java)
+        return restClient.post().uri(getUserInfoUrl(WxConst.accessToken, openId))
+            .contentType(MediaType.APPLICATION_JSON).retrieve().toEntity<WxGetUserInfoVo>().body
     }
 
     /**
@@ -231,7 +249,9 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     fun getH5UserAccessToken(code: String): WxH5AccessTokenVo? {
         val accessTokenUrl = getH5AccessTokenUrl(code)
         logger.info("accessTokenUrl:$accessTokenUrl")
-        return restTemplate.getForObject(accessTokenUrl, WxH5AccessTokenVo::class.java)
+//        return restTemplate.getForObject(accessTokenUrl, WxH5AccessTokenVo::class.java)
+        return restClient.get().uri(accessTokenUrl).accept(MediaType.APPLICATION_JSON).retrieve()
+            .toEntity<WxH5AccessTokenVo>().body
     }
 
     fun getH5User(code: String): WxUserVo? {
@@ -242,10 +262,14 @@ class Wx(wxConfigProperties: WxConfigProperties) {
             if (it.access_token.isBlank()) throw RuntimeException("获取accessToken失败:${it.errmsg}")
             val token = it.access_token
             val openid = it.openid
-            restTemplate.getForObject(getH5UserUrl(token, openid), WxUserVo::class.java)?.let {
-                logger.info("getUser:$it")
-                user = it
-            }
+//            restTemplate.getForObject(getH5UserUrl(token, openid), WxUserVo::class.java)?.let {
+//                logger.info("getUser:$it")
+//                user = it
+//            }
+            restClient.get().uri(getH5UserUrl(token, openid)).accept(MediaType.APPLICATION_JSON).retrieve()
+                .toEntity<WxUserVo>().body?.let {
+                    user = it
+                }
         }
         return user
     }
@@ -261,9 +285,10 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         )
         logger.info("发送客户消息:$dto")
         val entity = HttpEntity(dto, getHeaders())
-        restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
-            logger.info("发送客服消息回复:$it")
-        }
+//        restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
+//            logger.info("发送客服消息回复:$it")
+//        }
+        restClient.post().uri(sendCustomerMsg(WxConst.accessToken)).body(dto).retrieve()
     }
 
     /**
@@ -275,7 +300,13 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         val params = LinkedMultiValueMap<String, Any>()
         params["media"] = FileSystemResource(dto.file)
         val entity = HttpEntity(params, headers)
-        val res = restTemplate.postForObject(uploadMaterialUrl(WxConst.accessToken), entity, String::class.java)
+//        val res = restTemplate.postForObject(uploadMaterialUrl(WxConst.accessToken), entity, String::class.java)
+        val res = restClient.post().uri(uploadMaterialUrl(WxConst.accessToken))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(params)
+            .retrieve()
+            .toEntity<String>()
+            .body
         res?.let {
             if (res.contains("err")) {
                 logger.error("上传素材失败:$res")
