@@ -99,8 +99,7 @@ fun getRestTemplate(): RestTemplate {
 }
 
 fun getRestClient(): RestClient {
-    return RestClient.builder()
-        .build()
+    return RestClient.builder().build()
 }
 
 
@@ -125,6 +124,7 @@ fun getHeaders(body: Any): HttpHeaders {
     header.contentLength = getMapper().writeValueAsBytes(body).size.toLong()
     return header
 }
+
 fun getContentLength(body: Any): Long {
     return getMapper().writeValueAsBytes(body).size.toLong()
 }
@@ -178,3 +178,5 @@ fun logger(msg: String) {
         logger.info(msg)
     }
 }
+
+

@@ -179,6 +179,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
 //        val entity = HttpEntity<WxCreateMenuDto>(dto, getHeaders())
 //        return restTemplate.postForObject(createMenuUrl(WxConst.accessToken), entity, WxCreateMenuVo::class.java)
         return restClient.post().uri(createMenuUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON)
+            .contentLength(getContentLength(dto))
             .body(dto).retrieve().toEntity(WxCreateMenuVo::class.java).body
     }
 
@@ -188,6 +189,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
 //        logger.info("sendTemplate:$entity")
 //        return restTemplate.postForObject(templateUrl(WxConst.accessToken), entity, WxTemplateVo::class.java)
         return restClient.post().uri(templateUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON).body(dto)
+            .contentLength(getContentLength(dto))
             .retrieve().toEntity<WxTemplateVo>().body
 
     }
@@ -284,11 +286,12 @@ class Wx(wxConfigProperties: WxConfigProperties) {
             )
         )
         logger.info("发送客户消息:$dto")
-        val entity = HttpEntity(dto, getHeaders())
+//        val entity = HttpEntity(dto, getHeaders())
 //        restTemplate.postForObject(sendCustomerMsg(WxConst.accessToken), entity, HashMap::class.java)?.let {
 //            logger.info("发送客服消息回复:$it")
 //        }
-        restClient.post().uri(sendCustomerMsg(WxConst.accessToken)).body(dto).retrieve()
+        restClient.post().uri(sendCustomerMsg(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON).body(dto)
+            .contentLength(getContentLength(dto)).retrieve()
     }
 
     /**
@@ -304,7 +307,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         val res = restClient.post().uri(uploadMaterialUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON)
             .headers {
                 it.addAll(headers)
-            }.body(params).retrieve().toEntity<String>().body
+            }.body(params).contentLength(getContentLength(params)).retrieve().toEntity<String>().body
         res?.let {
             if (res.contains("err")) {
                 logger.error("上传素材失败:$res")
