@@ -99,8 +99,8 @@ fun getRestTemplate(): RestTemplate {
 }
 
 fun getRestClient(): RestClient {
-    return RestClient.builder().defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-        .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE).build()
+    return RestClient.builder()
+        .build()
 }
 
 
@@ -125,6 +125,9 @@ fun getHeaders(body: Any): HttpHeaders {
     header.contentLength = getMapper().writeValueAsBytes(body).size.toLong()
     return header
 }
+fun getContentLength(body: Any): Long {
+    return getMapper().writeValueAsBytes(body).size.toLong()
+}
 
 
 fun getPayHeaders(token: String): HttpHeaders {
@@ -143,6 +146,7 @@ fun getPayHeaders(token: String): HttpHeaders {
 fun getMapper(): ObjectMapper {
     val mapper = ObjectMapper()
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+
     return mapper
 }
 

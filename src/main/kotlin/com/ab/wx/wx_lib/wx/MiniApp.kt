@@ -3,15 +3,13 @@ package com.ab.wx.wx_lib.wx
 import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
 import com.ab.wx.wx_lib.dto.miniapp.MiniappMsgDto
-import com.ab.wx.wx_lib.fn.getHeaders
-import com.ab.wx.wx_lib.fn.getRestClient
-import com.ab.wx.wx_lib.fn.getRestTemplate
-import com.ab.wx.wx_lib.fn.logger
+import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
 import com.ab.wx.wx_lib.vo.miniapp.Code2SessionVo
 import org.springframework.http.HttpEntity
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.body
 
 class MiniApp(val miniAppId: String, val miniAppSec: String) {
     //    private val restTemplate: RestTemplate = getRestTemplate()
@@ -23,8 +21,11 @@ class MiniApp(val miniAppId: String, val miniAppSec: String) {
             https://api.weixin.qq.com/sns/jscode2session?appid=${miniAppId}&secret=${miniAppSec}&js_code=${code}&grant_type=authorization_code
         """.trimIndent()
 //        return restTemplate.getForObject(code2sessionUrl, Code2SessionVo::class.java)
-        return restClient.get().uri(code2sessionUrl).accept(MediaType.APPLICATION_JSON).retrieve()
-            .body(Code2SessionVo::class.java)
+        val res = restClient.get().uri(code2sessionUrl).retrieve().body<String>()
+        res?.let {
+            return getMapper().readValue(it, Code2SessionVo::class.java)
+        }
+        return null
     }
 
     /**
@@ -43,8 +44,7 @@ class MiniApp(val miniAppId: String, val miniAppSec: String) {
 //            return accessToken
 //        }
 //        return ""
-        val res = restClient.get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve()
-            .body(AppAccessTokenVo::class.java)
+        val res = restClient.get().uri(url).retrieve().body(AppAccessTokenVo::class.java)
         if (res != null) {
             accessToken = res.access_token
             WxConst.miniAppToken = res.access_token

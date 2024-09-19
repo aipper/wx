@@ -203,8 +203,8 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         val entity = HttpEntity(dto, getHeaders())
         logger.info("qrCodeUrl:${qrCodeUrl(WxConst.accessToken)}")
 //        return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
-        return restClient.post().uri(qrCodeUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON).body(dto)
-            .retrieve().toEntity<WxQrCodeVo>().body
+        return restClient.post().uri(qrCodeUrl(WxConst.accessToken)).contentLength(getContentLength(dto))
+            .contentType(MediaType.APPLICATION_JSON).body(dto).retrieve().toEntity<WxQrCodeVo>().body
     }
 
     /**
@@ -214,7 +214,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         val entity = HttpEntity<ExpiredQrCodeDto>(dto, getHeaders())
 //        return restTemplate.postForObject(qrCodeUrl(WxConst.accessToken), entity, WxQrCodeVo::class.java)
         return restClient.post().uri(qrCodeUrl(WxConst.accessToken)).body(dto).contentType(MediaType.APPLICATION_JSON)
-            .retrieve().toEntity<WxQrCodeVo>().body
+            .contentLength(getContentLength(dto)).retrieve().toEntity<WxQrCodeVo>().body
     }
 
     /**
@@ -301,12 +301,10 @@ class Wx(wxConfigProperties: WxConfigProperties) {
         params["media"] = FileSystemResource(dto.file)
         val entity = HttpEntity(params, headers)
 //        val res = restTemplate.postForObject(uploadMaterialUrl(WxConst.accessToken), entity, String::class.java)
-        val res = restClient.post().uri(uploadMaterialUrl(WxConst.accessToken))
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(params)
-            .retrieve()
-            .toEntity<String>()
-            .body
+        val res = restClient.post().uri(uploadMaterialUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON)
+            .headers {
+                it.addAll(headers)
+            }.body(params).retrieve().toEntity<String>().body
         res?.let {
             if (res.contains("err")) {
                 logger.error("上传素材失败:$res")
