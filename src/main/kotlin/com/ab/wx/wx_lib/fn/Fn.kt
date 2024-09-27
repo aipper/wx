@@ -126,7 +126,7 @@ fun getHeaders(body: Any): HttpHeaders {
 }
 
 fun getContentLength(body: Any): Long {
-    return getMapper().writeValueAsBytes(body).size.toLong()
+    return ObjectMapper().writeValueAsBytes(body).size.toLong()
 }
 
 
@@ -149,6 +149,7 @@ fun getMapper(): ObjectMapper {
 
     return mapper
 }
+
 
 fun readIns(input: InputStream): String {
     InputStreamReader(input).use {

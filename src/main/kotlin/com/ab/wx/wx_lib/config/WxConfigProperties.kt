@@ -10,6 +10,7 @@ class WxConfigProperties {
     lateinit var appSec: String
     lateinit var miniAppId: String
     lateinit var miniAppSec: String
+    lateinit var miniAppToken: String
     lateinit var wxToken: String
     var debug: Boolean = false
 

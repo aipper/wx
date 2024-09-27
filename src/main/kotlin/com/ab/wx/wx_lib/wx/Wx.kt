@@ -176,8 +176,6 @@ class Wx(wxConfigProperties: WxConfigProperties) {
     }
 
     fun createMenu(dto: WxCreateMenuDto): WxCreateMenuVo? {
-//        val entity = HttpEntity<WxCreateMenuDto>(dto, getHeaders())
-//        return restTemplate.postForObject(createMenuUrl(WxConst.accessToken), entity, WxCreateMenuVo::class.java)
         return restClient.post().uri(createMenuUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON)
             .contentLength(getContentLength(dto))
             .body(dto).retrieve().toEntity(WxCreateMenuVo::class.java).body
