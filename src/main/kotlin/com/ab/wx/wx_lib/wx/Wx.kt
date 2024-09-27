@@ -177,8 +177,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
 
     fun createMenu(dto: WxCreateMenuDto): WxCreateMenuVo? {
         return restClient.post().uri(createMenuUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON)
-            .contentLength(getContentLength(dto))
-            .body(dto).retrieve().toEntity(WxCreateMenuVo::class.java).body
+            .contentLength(getContentLength(dto)).body(dto).retrieve().toEntity(WxCreateMenuVo::class.java).body
     }
 
 
@@ -187,8 +186,7 @@ class Wx(wxConfigProperties: WxConfigProperties) {
 //        logger.info("sendTemplate:$entity")
 //        return restTemplate.postForObject(templateUrl(WxConst.accessToken), entity, WxTemplateVo::class.java)
         return restClient.post().uri(templateUrl(WxConst.accessToken)).contentType(MediaType.APPLICATION_JSON).body(dto)
-            .contentLength(getContentLength(dto))
-            .retrieve().toEntity<WxTemplateVo>().body
+            .contentLength(getContentLength(dto)).retrieve().toEntity<WxTemplateVo>().body
 
     }
 
@@ -232,8 +230,12 @@ class Wx(wxConfigProperties: WxConfigProperties) {
      */
     fun getUserInfo(openId: String): WxGetUserInfoVo? {
 //        return restTemplate.getForObject(getUserInfoUrl(WxConst.accessToken, openId), WxGetUserInfoVo::class.java)
-        return restClient.post().uri(getUserInfoUrl(WxConst.accessToken, openId))
-            .contentType(MediaType.APPLICATION_JSON).retrieve().toEntity<WxGetUserInfoVo>().body
+        val res =
+            restClient.post().uri(getUserInfoUrl(WxConst.accessToken, openId)).contentType(MediaType.APPLICATION_JSON)
+                .retrieve().toEntity<String>().body
+        logger.info("获取用户信息:${res}")
+        return if (res != null) getMapper().readValue(res, WxGetUserInfoVo::class.java)
+        else null
     }
 
     /**

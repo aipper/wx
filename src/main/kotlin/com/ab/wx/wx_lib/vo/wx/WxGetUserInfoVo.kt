@@ -1,5 +1,7 @@
 package com.ab.wx.wx_lib.vo.wx
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
 /**
  * {
  *     "subscribe": 1,
@@ -15,6 +17,7 @@ package com.ab.wx.wx_lib.vo.wx
  *     "qr_scene_str": ""
  * }
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class WxGetUserInfoVo(
     val subscribe: Int = 1,
     val openid: String = "",
