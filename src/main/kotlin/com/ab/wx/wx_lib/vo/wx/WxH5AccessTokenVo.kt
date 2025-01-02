@@ -1,5 +1,7 @@
 package com.ab.wx.wx_lib.vo.wx
 
+import java.io.Serializable
+
 /**
  * {
  *   "access_token":"ACCESS_TOKEN",
@@ -21,4 +23,4 @@ data class WxH5AccessTokenVo(
     val unionid: String = "",
     val errcode: String = "",
     val errmsg: String = ""
-)
+):Serializable

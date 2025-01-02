@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.vo.wx
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.io.Serializable
 
 /**
  * {"ticket":"gQH47joAAAAAAAAAASxodHRwOi8vd2VpeGluLnFxLmNvbS9xL2taZ2Z3TVRtNzJXV1Brb3ZhYmJJAAIEZ23sUwMEmm
@@ -9,4 +10,4 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WxQrCodeVo(
     val ticket: String = "", val expire_seconds: Long = 0, val url: String = ""
-)
+):Serializable

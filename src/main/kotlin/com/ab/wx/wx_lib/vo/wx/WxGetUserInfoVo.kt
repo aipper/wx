@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.vo.wx
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.io.Serializable
 
 /**
  * {
@@ -30,4 +31,4 @@ data class WxGetUserInfoVo(
     val subscribe_scene: String? = null,
     val qr_scene: String? = null,
     val qr_scene_str: String? = null
-)
+) : Serializable

@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.vo.pay
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.io.Serializable
 
 /**
  * {"mchid":"1638537256","appid":"wxdbbf793c5db4adf6",
@@ -25,7 +26,7 @@ data class H5PayDecodeVo(
     val payer: Payer = Payer(),
     val amount: Amount = Amount(),
     val promotion_detail: List<PromotionDetail> = arrayListOf()
-)
+) : Serializable
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PromotionDetail(
@@ -69,12 +70,12 @@ data class PromotionDetail(
      * 优惠币总
      */
     val currency: String = ""
-)
+) : Serializable
 
 data class Amount(
     val total: Int = 0, val payer_total: Int = 0, val currency: String = "", val payer_currency: String = ""
-)
+) : Serializable
 
 data class Payer(
     val openid: String = ""
-)
+) : Serializable

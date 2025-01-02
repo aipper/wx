@@ -1,5 +1,7 @@
 package com.ab.wx.wx_lib.vo.wx
 
+import java.io.Serializable
+
 /**
  * {
  *   "openid": "OPENID",
@@ -25,4 +27,4 @@ data class WxUserVo(
     val unionid: String = "",
     val errcode: String = "",
     val errmsg: String = ""
-)
+) : Serializable

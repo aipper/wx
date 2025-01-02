@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.ab.wx</groupId>
     <artifactId>wx_lib</artifactId>
-    <version>2.0.12</version>
+    <version>2.0.13</version>
     <name>wx_lib</name>
     <description>wx_lib</description>
     <properties>
@@ -131,9 +131,15 @@
         </plugins>
     </build>
     <distributionManagement>
+<!--        <repository>-->
+<!--            <id>zczx</id>-->
+<!--            <url>https://nexus.dev.hubeis.cn/repository/zczx/</url>-->
+<!--        </repository>-->
+
+
         <repository>
-            <id>zczx</id>
-            <url>https://nexus.dev.hubeis.cn/repository/zczx/</url>
+            <id>js</id>
+            <url>https://n.allblux.wang/repository/mavenLocal/</url>
         </repository>
     </distributionManagement>
 </project>

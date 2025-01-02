@@ -1,5 +1,7 @@
 package com.ab.wx.wx_lib.vo.wx
 
+import java.io.Serializable
+
 /**
  * {
  *
@@ -13,4 +15,4 @@ package com.ab.wx.wx_lib.vo.wx
  */
 data class WxTemplateVo(
     val errcode: Int = 0, val errmsg: String = "", val msgid: Any? = null
-)
+):Serializable

@@ -1,7 +1,7 @@
 package com.ab.wx.wx_lib.vo.pay
 
 import com.ab.wx.wx_lib.enums.TransMoneyStatusEnums
-import com.ab.wx.wx_lib.fn.getMapper
+import java.io.Serializable
 
 /**
  * {
@@ -44,11 +44,11 @@ data class H5RefundsDecodeVo(
     val success_time: String = "",
     val user_received_account: String = "",
     val amount: DecodeAmountVo = DecodeAmountVo(),
-)
+) : Serializable
 
 data class DecodeAmountVo(
     val total: Int = 0, val refund: Int = 0, val payer_total: Int = 0, val payer_refund: Int = 0
-)
+) : Serializable
 
 
 /**
@@ -79,4 +79,4 @@ data class TransferCallbackVo(
     val fail_num: Int = 0,
     val mchid: String = "",
     val update_time: String = ""
-)
+) : Serializable

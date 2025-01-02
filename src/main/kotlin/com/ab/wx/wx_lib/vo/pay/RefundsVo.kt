@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.vo.pay
 
 import com.ab.wx.wx_lib.dto.pay.RefundsGoods
+import java.io.Serializable
 
 /**
  * 退款返回数据
@@ -67,11 +68,11 @@ data class RefundsVo(
     val amount: RefundsAmountVo,
     val promotion_detail: List<RefundsPromotionDetail>?
 
-)
+) : Serializable
 
 data class RefundsAmountFromVo(
     val account: String, val amount: Int
-)
+) : Serializable
 
 data class RefundsAmountVo(
     /**
@@ -114,7 +115,7 @@ data class RefundsAmountVo(
      * 手续费退款金额
      */
     val refund_fee: Int = 0
-)
+) : Serializable
 
 data class RefundsPromotionDetail(
     val promotion_id: String,
@@ -123,4 +124,4 @@ data class RefundsPromotionDetail(
     val amount: Int,
     val refund_amount: Int,
     val goods_detail: List<RefundsGoods>?
-)
+) : Serializable
