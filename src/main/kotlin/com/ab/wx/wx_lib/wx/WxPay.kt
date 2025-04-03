@@ -78,6 +78,16 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      */
     private val transferUrl = "https://api.mch.weixin.qq.com/v3/transfer/batches"
 
+    /**
+     * 添加分账接收方
+     */
+    private val addReceiverUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/receivers/add"
+
+    /**
+     * 请求分账
+     */
+    private val requestTransferUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders"
+
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
 //        return """
 //            $method
@@ -377,6 +387,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         instance.init(Cipher.ENCRYPT_MODE, certificate?.publicKey)
         val message = msg?.toByteArray()
         return Base64.getEncoder().encodeToString(instance.doFinal(message))
+    }
+
+
+    /**
+     * 添加分账接收方
+     */
+    fun addReceiver(addReceiverDto: AddReceiverDto) {
+
     }
 
 }
