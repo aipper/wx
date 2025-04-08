@@ -1,5 +1,8 @@
 package com.ab.wx.wx_lib.vo.pay
 
+/**
+ * 请求分账返回结果
+ */
 data class RequestOrderVo(
     val transaction_id: String = "",
     val out_order_no: String = "",

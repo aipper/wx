@@ -7,7 +7,6 @@ import com.ab.wx.wx_lib.fn.aes.WxPayAes
 import com.ab.wx.wx_lib.vo.pay.*
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.web.client.toEntity
 import java.io.ByteArrayInputStream
@@ -23,8 +22,6 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
-import kotlin.collections.HashMap
-import kotlin.math.sign
 
 
 class WxPay(wxConfigProperties: WxConfigProperties) {
@@ -84,9 +81,19 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val addReceiverUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/receivers/add"
 
     /**
+     * 删除分账接收方
+     */
+    private val deleteReceiverUrl = "https://api.mch.weixin.qq.com/profitsharing/receivers/delete"
+
+    /**
      * 请求分账
      */
     private val requestTransferUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders"
+
+    /**
+     * 解冻资金
+     */
+    private val unfreezeUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders/unfreeze"
 
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
 //        return """
@@ -119,8 +126,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             val entity = HttpEntity(json, header)
 //            val res = restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
             val res = restClient.post().uri(transferUrl).headers {
-                    it.addAll(header)
-                }.contentType(MediaType.APPLICATION_JSON).body(json).retrieve().toEntity<TransferVo>().body
+                it.addAll(header)
+            }.contentType(MediaType.APPLICATION_JSON).body(json).retrieve().toEntity<TransferVo>().body
             logger("transer res :$res")
             return res
         }
@@ -393,8 +400,38 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     /**
      * 添加分账接收方
      */
-    fun addReceiver(addReceiverDto: AddReceiverDto) {
-
+    fun addReceiver(addReceiverDto: AddReceiverDto): AddReceiverVo? {
+        val json = mapper.writeValueAsString(addReceiverDto)
+        val header = getPayHeaders(genToken("POST", addReceiverUrl, json))
+        header.add("Wechatpay-Serial", payCert?.serial_no)
+        return restClient.post().uri(addReceiverUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity<AddReceiverVo>().body
     }
 
+    fun delReceiver(delReceiverDto: DelReceiverDto): DelReceiverVo? {
+        val json = mapper.writeValueAsString(delReceiverDto)
+        val header = getPayHeaders(genToken("POST", deleteReceiverUrl, json))
+        return restClient.post().uri(deleteReceiverUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity(DelReceiverVo::class.java).body
+    }
+
+    fun requestTransfer(requestOrderDto: RequestOrderDto): RequestOrderVo? {
+        val json = mapper.writeValueAsString(requestOrderDto)
+        val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
+        header.add("Wechatpay-Serial", payCert?.serial_no)
+        return restClient.post().uri(requestTransferUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity(RequestOrderVo::class.java).body
+    }
+
+    fun unfreeze(unfreezeDto: UnfreezeDto): UnfreezeVo? {
+        val json = mapper.writeValueAsString(unfreezeDto)
+        val header = getPayHeaders(genToken("POST", unfreezeUrl, json))
+        header.add("Wechatpay-Serial", payCert?.serial_no)
+        return restClient.post().uri(unfreezeUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity(UnfreezeVo::class.java).body
+    }
 }
