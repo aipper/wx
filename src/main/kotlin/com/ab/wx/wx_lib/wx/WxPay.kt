@@ -224,7 +224,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                 out_trade_no = dto.orderNo,
                 notify_url = dto.notifyUrl.ifBlank { "$notifyUrl" },
                 amount = JsApiPayAmountDto(total = dto.amount),
-                payer = JsApiPayerDto(dto.payOpenid)
+                payer = JsApiPayerDto(dto.payOpenid),
+                settle_info = if (dto.profit_sharing) SettleInfoDto(true) else null
             )
             return genJsApiPay(payDto, method, dto.orderNo, appId)
         }
