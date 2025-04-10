@@ -402,12 +402,21 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      * 添加分账接收方
      */
     fun addReceiver(addReceiverDto: AddReceiverDto): AddReceiverVo? {
-        val json = mapper.writeValueAsString(addReceiverDto)
-        val header = getPayHeaders(genToken("POST", addReceiverUrl, json))
-        header.add("Wechatpay-Serial", payCert?.serial_no)
-        return restClient.post().uri(addReceiverUrl).headers {
-            it.addAll(header)
-        }.body(json).retrieve().toEntity<AddReceiverVo>().body
+        v3Key?.let {
+            val json = mapper.writeValueAsString(
+                addReceiverDto.copy(
+                    name = encodeSensitive(
+                        addReceiverDto.name, autoGenCert(apiV3Key = v3Key)
+                    )
+                )
+            )
+            val header = getPayHeaders(genToken("POST", addReceiverUrl, json))
+            header.add("Wechatpay-Serial", payCert?.serial_no)
+            return restClient.post().uri(addReceiverUrl).headers {
+                it.addAll(header)
+            }.body(json).retrieve().toEntity<AddReceiverVo>().body
+        }
+        return null
     }
 
     fun delReceiver(delReceiverDto: DelReceiverDto): DelReceiverVo? {
@@ -419,12 +428,23 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     }
 
     fun requestTransfer(requestOrderDto: RequestOrderDto): RequestOrderVo? {
-        val json = mapper.writeValueAsString(requestOrderDto)
-        val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
-        header.add("Wechatpay-Serial", payCert?.serial_no)
-        return restClient.post().uri(requestTransferUrl).headers {
-            it.addAll(header)
-        }.body(json).retrieve().toEntity(RequestOrderVo::class.java).body
+        v3Key?.let {
+            val json = mapper.writeValueAsString(
+                requestOrderDto.copy(
+                receivers = requestOrderDto.receivers.map {
+                    it.copy(
+                        name = encodeSensitive(
+                            it.name, autoGenCert(apiV3Key = v3Key)
+                        )
+                    )
+                }))
+            val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
+            header.add("Wechatpay-Serial", payCert?.serial_no)
+            return restClient.post().uri(requestTransferUrl).headers {
+                it.addAll(header)
+            }.body(json).retrieve().toEntity(RequestOrderVo::class.java).body
+        }
+        return null
     }
 
     fun unfreeze(unfreezeDto: UnfreezeDto): UnfreezeVo? {

@@ -7,6 +7,6 @@ data class AddReceiverDto(
     val appid: String = "",
     val type: AddReceiverEnums = AddReceiverEnums.MERCHANT_ID,
     val account: String = "",
-    val name: String = "",
+    var name: String? = "",
     val relation_type: RelationTypeEnums = RelationTypeEnums.PARTNER,
 )

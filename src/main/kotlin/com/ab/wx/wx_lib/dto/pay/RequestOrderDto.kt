@@ -15,7 +15,7 @@ data class RequestOrderDto(
 data class Receiver(
     val type: AddReceiverEnums = AddReceiverEnums.MERCHANT_ID,
     val account: String = "",
-    val name: String = "",
+    val name: String? = "",
     val amount: Int = 0,
     val description: String = ""
 )
