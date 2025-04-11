@@ -95,6 +95,11 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      */
     private val unfreezeUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders/unfreeze"
 
+    /**
+     *创建投诉通知回调地址
+     */
+    private val complaintNotifyUrl = "https://api.mch.weixin.qq.com/v3/merchant-service/complaint-notifications"
+
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
 //        return """
 //            $method
@@ -368,8 +373,6 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private fun refunds(refundPayDto: RefundPayDto): String? {
         val json = mapper.writeValueAsString(refundPayDto)
         val header = getPayHeaders(genToken("POST", refuseUrl, json))
-        val entity = HttpEntity(json, header)
-//        return restTemplate.postForObject(refuseUrl, entity, String::class.java)
         return restClient.post().uri(refuseUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity<String>().body
@@ -454,5 +457,12 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return restClient.post().uri(unfreezeUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity(UnfreezeVo::class.java).body
+    }
+    fun complaintNotify(dto:ComplaintNotifyDto): ComplaintNotifyVo? {
+       val json = mapper.writeValueAsString(dto)
+        val header = getPayHeaders(genToken("POST", complaintNotifyUrl, json))
+        return restClient.post().uri(complaintNotifyUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity(ComplaintNotifyVo::class.java).body
     }
 }
