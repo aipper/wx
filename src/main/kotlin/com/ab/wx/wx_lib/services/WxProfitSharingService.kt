@@ -1,5 +1,15 @@
 package com.ab.wx.wx_lib.services
 
+import com.ab.wx.wx_lib.dto.pay.AddReceiverDto
+import com.ab.wx.wx_lib.dto.pay.DelReceiverDto
+import com.ab.wx.wx_lib.dto.pay.RequestOrderDto
+import com.ab.wx.wx_lib.dto.pay.UnfreezeDto
+import com.ab.wx.wx_lib.vo.pay.AddReceiverVo
+import com.ab.wx.wx_lib.vo.pay.DelReceiverVo
+import com.ab.wx.wx_lib.vo.pay.RequestOrderVo
+import com.ab.wx.wx_lib.vo.pay.UnfreezeVo
+
+
 /**
  * 微信分账接口抽象
  */

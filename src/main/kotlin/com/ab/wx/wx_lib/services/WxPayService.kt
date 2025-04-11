@@ -5,6 +5,7 @@ import com.ab.wx.wx_lib.dto.pay.SimpleRefundsDto
 import com.ab.wx.wx_lib.vo.pay.H5PayDecodeVo
 import com.ab.wx.wx_lib.vo.pay.H5RefundsDecodeVo
 import com.ab.wx.wx_lib.vo.pay.JsApiPayRes
+import com.ab.wx.wx_lib.vo.pay.RefundResult
 import jakarta.servlet.http.HttpServletRequest
 
 /**
