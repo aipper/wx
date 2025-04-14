@@ -9,6 +9,7 @@ import com.ab.wx.wx_lib.const.WxConst
 import com.ab.wx.wx_lib.exception.RestErrHandler
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -146,7 +147,7 @@ fun getPayHeaders(token: String): HttpHeaders {
 fun getMapper(): ObjectMapper {
     val mapper = ObjectMapper()
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-
+    mapper.registerModules(JavaTimeModule())
     return mapper
 }
 
