@@ -434,13 +434,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         v3Key?.let {
             val json = mapper.writeValueAsString(
                 requestOrderDto.copy(
-                receivers = requestOrderDto.receivers.map {
-                    it.copy(
-                        name = encodeSensitive(
-                            it.name, autoGenCert(apiV3Key = v3Key)
+                    receivers = requestOrderDto.receivers.map {
+                        it.copy(
+                            name = encodeSensitive(
+                                it.name, autoGenCert(apiV3Key = v3Key)
+                            )
                         )
-                    )
-                }))
+                    })
+            )
             val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
             header.add("Wechatpay-Serial", payCert?.serial_no)
             return restClient.post().uri(requestTransferUrl).headers {
@@ -458,11 +459,23 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             it.addAll(header)
         }.body(json).retrieve().toEntity(UnfreezeVo::class.java).body
     }
-    fun complaintNotify(dto:ComplaintNotifyDto): ComplaintNotifyVo? {
-       val json = mapper.writeValueAsString(dto)
+
+    fun complaintNotify(dto: ComplaintNotifyDto): ComplaintNotifyVo? {
+        val json = mapper.writeValueAsString(dto)
         val header = getPayHeaders(genToken("POST", complaintNotifyUrl, json))
         return restClient.post().uri(complaintNotifyUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity(ComplaintNotifyVo::class.java).body
+    }
+
+    /**
+     * 投诉回调
+     */
+    fun complaintNotifyCallback(request: HttpServletRequest, apiV3Key: String): String? {
+        val body = readIns(request.inputStream)
+        val res = getMapper().readValue(body, ComplainNotifyTextVo::class.java)
+        return WxPayAes.decryptToString(
+            res.resource?.associated_data, res.resource?.nonce, res.resource?.ciphertext, apiV3Key
+        )
     }
 }
