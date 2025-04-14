@@ -2,6 +2,7 @@ package com.ab.wx.wx_lib.vo.pay
 
 import com.ab.wx.wx_lib.enums.TransMoneyStatusEnums
 import java.io.Serializable
+import java.time.OffsetDateTime
 
 /**
  * {
@@ -79,4 +80,21 @@ data class TransferCallbackVo(
     val fail_num: Int = 0,
     val mchid: String = "",
     val update_time: String = ""
+) : Serializable
+
+/**
+ *  投诉消息
+ *  {"out_trade_no":"1910653535501496322","complaint_time":"2025-04-14T21:53:08+08:00","amount":200,"payer_phone":"15972618111","complaint_detail":"押金没退回处理一下！","complaint_state":"PAYER_COMPLAINTED","transaction_id":"4200002677202504114304387847","complaint_handle_state":"WAIT_MERCHANT_RESPONSE","action_type":"CREATE_COMPLAINT","complaint_id":"200000020250414210271430103"}
+ */
+data class ComplaintNotifyDecodeVo(
+    val out_trade_no: String = "",
+    val complaint_time: OffsetDateTime?=null,
+    val amount: Int = 0,
+    val payer_phone: String = "",
+    val complaint_detail: String = "",
+    val complaint_state: String = "",
+    val transaction_id: String = "",
+    val complaint_handle_state: String = "",
+    val action_type: String = "",
+    val complaint_id: String = ""
 ) : Serializable
