@@ -471,11 +471,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     /**
      * 投诉回调
      */
-    fun complaintNotifyCallback(request: HttpServletRequest, apiV3Key: String): String? {
+    fun complaintNotifyCallback(request: HttpServletRequest): String? {
         val body = readIns(request.inputStream)
         val res = getMapper().readValue(body, ComplainNotifyTextVo::class.java)
-        return WxPayAes.decryptToString(
-            res.resource?.associated_data, res.resource?.nonce, res.resource?.ciphertext, apiV3Key
-        )
+        v3Key?.let {
+            return WxPayAes.decryptToString(
+                res.resource?.associated_data, res.resource?.nonce, res.resource?.ciphertext, v3Key
+            )
+        }
+        return null
     }
 }
