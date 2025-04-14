@@ -1,10 +1,11 @@
 package com.ab.wx.wx_lib.vo.pay
 
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 data class ComplainNotifyTextVo(
     val id: String = "",
-    val create_time: LocalDateTime? = null,
+    val create_time: OffsetDateTime? = null,
     val event_type: String = "",
     val resource_type: String = "",
     val summary: String = "",
