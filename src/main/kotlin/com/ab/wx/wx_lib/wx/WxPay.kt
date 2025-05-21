@@ -33,6 +33,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     //    private val v3key = wxConfigProperties.pay?.v3key
     private val keyPath = wxConfigProperties.pay?.keyPath
     private val serialNo = wxConfigProperties.pay?.serialNo
+    private val publicKeyPath = wxConfigProperties.pay?.publicKeyPath
 
     private val v3Key = wxConfigProperties.pay?.v3key
 
@@ -166,9 +167,14 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return result
     }
 
-
-    private fun genPrivateKey(key: String) {
-
+    private fun genPublicKeyWithPath(): String {
+        var result = ""
+        publicKeyPath?.let {
+            FileInputStream(publicKeyPath).use {
+                result = readIns(it)
+            }
+        }
+        return result
     }
 
 
@@ -204,13 +210,15 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return Base64.getEncoder().encodeToString(s.sign())
     }
 
-//    private fun signWithAutoKey(message: ByteArray): String? {
-//        val s = Signature.getInstance(SIGN_METHOD)
-//        s.initVerify(x509Certificate)
-//
-//        s.update(message)
-//        return Base64.getEncoder().encodeToString(s.sign())
-//    }
+
+    private fun signWithPublicKey(message: ByteArray): String? {
+        val s = Signature.getInstance(SIGN_METHOD)
+        s.initSign(loadPrivateKeyFromString(genPublicKeyWithPath()))
+        s.update(message)
+        return Base64.getEncoder().encodeToString(s.sign())
+
+    }
+
 
     fun genSimplePay(dto: SimplePayDto, method: String): JsApiPayRes? {
         return payFn(dto, method, appId)
