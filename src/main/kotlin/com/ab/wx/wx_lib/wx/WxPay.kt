@@ -194,8 +194,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val processUrl = URL(url).path
         val message = genPaySign(method, processUrl, time, noticeStr, body)
 //        logger("message:$message")
-//        val signature = sign(message.toByteArray(charset(UTF8)), initFlag)
-        val signature = autoSelectSign(message.toByteArray(charset(UTF8)))
+        val signature = sign(message.toByteArray(charset(UTF8)), initFlag)
+//        val signature = autoSelectSign(message.toByteArray(charset(UTF8)))
 //        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
         val res =
             "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
@@ -204,27 +204,11 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     }
 
 
-    private fun autoSelectSign(message: ByteArray): String? {
-        return if (publicKeyPath == null || publicKeyPath.isBlank()) {
-            sign(message)
-        } else {
-            signWithPublicKey(message)
-        }
-    }
-
 
     private fun sign(message: ByteArray, initFlag: Boolean = false): String? {
         val s = Signature.getInstance(SIGN_METHOD)
         s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
 //            s.initVerify(x509Certificate)
-        s.update(message)
-        return Base64.getEncoder().encodeToString(s.sign())
-    }
-
-
-    private fun signWithPublicKey(message: ByteArray): String? {
-        val s = Signature.getInstance(SIGN_METHOD)
-        s.initVerify(genPublicKeyWithPath())
         s.update(message)
         return Base64.getEncoder().encodeToString(s.sign())
     }
@@ -292,10 +276,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private fun genJsSign(prepayId: String, orderNo: String, appId: String): JsApiPayRes {
         val time = create_timestamp()
         val notifyCode = create_pay_nonce()
-//        val signType = sign(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
-        val signType = autoSelectSign(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
-
-//        val signType = signWithAutoKey(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
+        val signType = sign(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
         return JsApiPayRes(
             prepayId = prepayId, timestamp = time, nonceStr = notifyCode, paySign = signType, orderId = orderNo
         )
