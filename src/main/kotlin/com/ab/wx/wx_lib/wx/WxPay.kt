@@ -90,6 +90,11 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val requestTransferUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders"
 
     /**
+     * 请求分账退回
+     */
+    private val requestTransferReturnUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/return-orders"
+
+    /**
      * 解冻资金
      */
     private val unfreezeUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders/unfreeze"
@@ -126,7 +131,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             )
             val header = getPayHeaders(genToken("POST", transferUrl, json))
             logger("pay:$payCert")
-            header.add("Wechatpay-Serial", publicKeyNo)
+            header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
             val entity = HttpEntity(json, header)
 //            val res = restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
             val res = restClient.post().uri(transferUrl).headers {
@@ -385,9 +390,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      */
     fun encodeSensitive(msg: String?): String? {
         val instance = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding")
-        instance.init(Cipher.ENCRYPT_MODE, genPublicKeyWithPath())
-        val message = msg?.toByteArray()
-        return Base64.getEncoder().encodeToString(instance.doFinal(message))
+        v3Key?.let {
+            val key = if (publicKeyNo.isNullOrBlank()) autoGenCert(v3Key)?.publicKey else genPublicKeyWithPath()
+            instance.init(Cipher.ENCRYPT_MODE, key)
+            val message = msg?.toByteArray()
+            return Base64.getEncoder().encodeToString(instance.doFinal(message))
+        }
+        return null
     }
 
 
@@ -404,7 +413,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                 )
             )
             val header = getPayHeaders(genToken("POST", addReceiverUrl, json))
-            header.add("Wechatpay-Serial", publicKeyNo)
+            header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
             return restClient.post().uri(addReceiverUrl).headers {
                 it.addAll(header)
             }.body(json).retrieve().toEntity<AddReceiverVo>().body
@@ -433,7 +442,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                     })
             )
             val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
-            header.add("Wechatpay-Serial", publicKeyNo)
+            header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
             return restClient.post().uri(requestTransferUrl).headers {
                 it.addAll(header)
             }.body(json).retrieve().toEntity(RequestOrderVo::class.java).body
@@ -444,10 +453,22 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun unfreeze(unfreezeDto: UnfreezeDto): UnfreezeVo? {
         val json = mapper.writeValueAsString(unfreezeDto)
         val header = getPayHeaders(genToken("POST", unfreezeUrl, json))
-        header.add("Wechatpay-Serial", publicKeyNo)
+        header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
         return restClient.post().uri(unfreezeUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity(UnfreezeVo::class.java).body
+    }
+
+    /**
+     * 分流后申请资金退回
+     */
+    fun transRefunds(dto: TransReturnDto): TransReturnVo? {
+        val json = mapper.writeValueAsString(dto)
+        val header = getPayHeaders(genToken("POST", requestTransferReturnUrl, json))
+        header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+        return restClient.post().uri(requestTransferReturnUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity(TransReturnVo::class.java).body
     }
 
     fun complaintNotify(dto: ComplaintNotifyDto): ComplaintNotifyVo? {
