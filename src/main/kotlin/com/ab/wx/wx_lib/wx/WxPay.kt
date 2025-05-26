@@ -10,6 +10,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.MediaType
 import org.springframework.web.client.toEntity
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.FileInputStream
 import java.net.URL
 import java.security.*
@@ -17,6 +18,7 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
 
@@ -172,9 +174,15 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private fun genPublicKeyWithPath(): PublicKey? {
         publicKeyPath?.let {
-            val cf = CertificateFactory.getInstance("X.509")
-            val cert = cf.generateCertificate(FileInputStream(publicKeyPath))
-            return cert.publicKey
+            val keyContent = File(publicKeyPath).readText(Charsets.UTF_8)
+            val publicKeyPEM =
+                keyContent.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "")
+                    .replace("\\s".toRegex(), "")
+
+            val decodedKey = Base64.getDecoder().decode(publicKeyPEM)
+            val keySpec = X509EncodedKeySpec(decodedKey)
+            val keyFactory = KeyFactory.getInstance("RSA")
+            return keyFactory.generatePublic(keySpec)
         }
         return null
     }

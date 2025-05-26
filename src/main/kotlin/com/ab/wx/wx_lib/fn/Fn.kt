@@ -1,7 +1,5 @@
 package com.ab.wx.wx_lib.fn
 
-import com.ab.wx.wx_lib.*
-import com.ab.wx.wx_lib.config.ContentLengthInterceptor
 import com.ab.wx.wx_lib.config.WxMappingJackson2HttpMessageConverter
 import com.ab.wx.wx_lib.const.BaseConst
 import com.ab.wx.wx_lib.const.R
@@ -14,18 +12,20 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.client.BufferingClientHttpRequestFactory
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.converter.StringHttpMessageConverter
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestTemplate
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.security.KeyFactory
 import java.security.MessageDigest
+import java.security.cert.CertificateFactory
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import java.util.stream.Collectors
-import javax.sql.rowset.serial.SQLOutputImpl
 
 
 private val logger = LoggerFactory.getLogger("Fn")
@@ -181,3 +181,4 @@ fun logger(msg: String) {
         logger.info(msg)
     }
 }
+
