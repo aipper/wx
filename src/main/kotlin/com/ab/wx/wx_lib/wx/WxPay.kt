@@ -264,6 +264,8 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      * 使用公钥验签
      */
     fun verifyByPublicKey(str: String, signature: String, serial: String): Boolean {
+        logger("verifyByPublicKey:$str signature:$signature serial:$serial")
+        logger("publicKeyNo:$publicKeyNo")
         if (serial !== publicKeyNo) return false
         val rsa = Signature.getInstance(SIGN_METHOD)
         rsa.initVerify(genPublicKeyWithPath())
@@ -465,6 +467,19 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         return restClient.post().uri(unfreezeUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity(UnfreezeVo::class.java).body
+    }
+
+    /**
+     * 请求分账结果
+     */
+    fun fetchTransResult(dto: FetchTransResultDto): FetchTransResultVo? {
+        val url =
+            "https://api.mch.weixin.qq.com/v3/profitsharing/orders/${dto.out_order_no}?transaction_id=${dto.transaction_id}"
+        val header = getPayHeaders(genToken("POST", url, ""))
+        header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+        return restClient.get().uri(url).headers {
+            it.addAll(header)
+        }.retrieve().toEntity(FetchTransResultVo::class.java).body
     }
 
     /**
