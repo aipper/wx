@@ -509,7 +509,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         }.retrieve().toEntity(ComplaintNotifyVo::class.java).body
         return res
     }
-    fun putComplaintNotify(dto: GetComplaintNotifyVO): ComplaintNotifyVo? {
+    fun putComplaintNotify(dto: ComplaintNotifyDto): ComplaintNotifyVo? {
         val json = mapper.writeValueAsString(dto)
         val header = getPayHeaders(genToken("PUT", complaintNotifyUrl, json))
         return restClient.put().uri(complaintNotifyUrl).headers {
