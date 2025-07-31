@@ -502,6 +502,21 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         }.body(json).retrieve().toEntity(ComplaintNotifyVo::class.java).body
     }
 
+    fun getComplaintNotify(): ComplaintNotifyVo? {
+        val header = getPayHeaders(genToken("GET", complaintNotifyUrl, body = ""))
+        val res = restClient.get().uri(complaintNotifyUrl).headers {
+            it.addAll(header)
+        }.retrieve().toEntity(ComplaintNotifyVo::class.java).body
+        return res
+    }
+    fun putComplaintNotify(dto: GetComplaintNotifyVO): ComplaintNotifyVo? {
+        val json = mapper.writeValueAsString(dto)
+        val header = getPayHeaders(genToken("PUT", complaintNotifyUrl, json))
+        return restClient.put().uri(complaintNotifyUrl).headers {
+            it.addAll(header)
+        }.body(json).retrieve().toEntity(ComplaintNotifyVo::class.java).body
+    }
+
     /**
      * 投诉回调
      */
