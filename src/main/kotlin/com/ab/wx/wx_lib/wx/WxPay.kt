@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
+import com.ab.wx.wx_lib.dto.ResponseComplaintDto
 import com.ab.wx.wx_lib.dto.pay.*
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.fn.aes.WxPayAes
@@ -105,6 +106,15 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      *创建投诉通知回调地址
      */
     private val complaintNotifyUrl = "https://api.mch.weixin.qq.com/v3/merchant-service/complaint-notifications"
+
+    /**
+     * 回复消息
+     */
+    private fun getResponseComplaint(id:String): String {
+       return  "https://api.mch.weixin.qq.com/v3/merchant-service/complaints-v2/${id}/response"
+    }
+
+
 
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
 //        return """
@@ -529,5 +539,16 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             )
         }
         return null
+    }
+
+    /**
+     * 回复投诉
+     */
+    fun responseComplaint(id: String,dto: ResponseComplaintDto) {
+        val url = getResponseComplaint(id)
+        val json = mapper.writeValueAsString(dto)
+        val header = getPayHeaders(genToken("POST",url,body=json))
+        restClient.post().uri(url).headers { it.addAll(header) }
+            .body(json).retrieve();
     }
 }
