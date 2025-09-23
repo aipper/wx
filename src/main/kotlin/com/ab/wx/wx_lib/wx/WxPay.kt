@@ -110,10 +110,22 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     /**
      * 回复消息
      */
-    private fun getResponseComplaint(id:String): String {
-       return  "https://api.mch.weixin.qq.com/v3/merchant-service/complaints-v2/${id}/response"
+    private fun getResponseComplaint(id: String): String {
+        return "https://api.mch.weixin.qq.com/v3/merchant-service/complaints-v2/${id}/response"
     }
 
+    /**
+     * 完成投诉
+     */
+    private fun getCompleteComplaint(id: String): String {
+        return "https://api.mch.weixin.qq.com/v3/merchant-service/complaints-v2/${id}/complete"
+    }
+
+    /**
+     * 主动查询投诉
+     */
+
+    private val complaintListUrl = "https://api.mch.weixin.qq.com/v3/merchant-service/complaints-v2"
 
 
 //    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
@@ -202,6 +214,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val noticeStr = create_pay_nonce()
         val time = create_timestamp()
         val processUrl = URL(url).path
+        logger("processUrl:${processUrl}")
         val message = genPaySign(method, processUrl, time, noticeStr, body)
         val signature = sign(message.toByteArray(charset(UTF8)), initFlag)
         val res =
@@ -519,6 +532,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         }.retrieve().toEntity(ComplaintNotifyVo::class.java).body
         return res
     }
+
     fun putComplaintNotify(dto: ComplaintNotifyDto): ComplaintNotifyVo? {
         val json = mapper.writeValueAsString(dto)
         val header = getPayHeaders(genToken("PUT", complaintNotifyUrl, json))
@@ -544,11 +558,28 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     /**
      * 回复投诉
      */
-    fun responseComplaint(id: String,dto: ResponseComplaintDto) {
+    fun responseComplaint(id: String, dto: ResponseComplaintDto) {
         val url = getResponseComplaint(id)
         val json = mapper.writeValueAsString(dto)
-        val header = getPayHeaders(genToken("POST",url,body=json))
-        restClient.post().uri(url).headers { it.addAll(header) }
-            .body(json).retrieve();
+        val header = getPayHeaders(genToken("POST", url, body = json))
+        restClient.post().uri(url).headers { it.addAll(header) }.body(json).retrieve();
+    }
+
+    fun completeComplaint(id: String, dto: ResponseComplaintDto) {
+        val url = getCompleteComplaint(id)
+        val json = mapper.writeValueAsString(dto)
+        val header = getPayHeaders(genToken("POST", url, body = json))
+        restClient.post().uri(url).headers { it.addAll(header) }.body(json).retrieve();
+    }
+
+    fun getComplaintList(dto: SearchComplaintListDto): SearchComplaintPagesVo? {
+        val url = appendQueryParamsWithObjectMapper(complaintListUrl, dto)
+        logger("url:${url}")
+        val json = mapper.writeValueAsString(dto)
+        val header = getPayHeaders(genToken("GET", url, json))
+        val res = restClient.get().uri(url).headers {
+            it.addAll(header)
+        }.retrieve().toEntity(SearchComplaintPagesVo::class.java).body
+        return res
     }
 }

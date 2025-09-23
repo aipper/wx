@@ -20,6 +20,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.net.URLEncoder
 import java.security.KeyFactory
 import java.security.MessageDigest
 import java.security.cert.CertificateFactory
@@ -141,6 +142,7 @@ fun getPayHeaders(token: String): HttpHeaders {
 //    header.set("Authorization",token)
     header.add("Authorization", token)
     header.add("User-Agent", "Mozilla/5.0")
+    logger("headers:${header}")
     return header
 }
 
@@ -182,3 +184,26 @@ fun logger(msg: String) {
     }
 }
 
+
+fun appendQueryParamsWithObjectMapper(baseUrl: String, paramsObject: Any): String {
+    val mapType = getMapper().typeFactory.constructMapType(
+        Map::class.java,
+        String::class.java,
+        Any::class.java
+    )
+    val paramsMap: Map<String, Any?> = getMapper().convertValue(paramsObject, mapType)
+    val queryString = paramsMap.entries
+        .filter { (_, value) -> value != null }
+        .joinToString("&") { (key, value) ->
+            val encodedKey = URLEncoder.encode(key, "UTF-8")
+            val encodedValue = URLEncoder.encode(value.toString(), "UTF-8")
+            "$encodedKey=$encodedValue"
+        }
+
+    if (queryString.isEmpty()) {
+        return baseUrl
+    }
+
+    val separator = if (baseUrl.contains("?")) "&" else "?"
+    return "$baseUrl$separator$queryString"
+}

@@ -5,6 +5,6 @@ data class ResponseComplaintDto(
      * 商户id
      */
     val complainted_mchid:String="",
-    val response_content:String = ""
+    val response_content:String? = null
 
 )
