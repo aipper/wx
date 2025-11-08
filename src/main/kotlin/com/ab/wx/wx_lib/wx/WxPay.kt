@@ -21,6 +21,7 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
+import java.time.Instant
 import javax.crypto.Cipher
 
 
@@ -52,6 +53,38 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private var x509Certificate: X509Certificate? = null
     private var payCert: PayCert? = null
+    // 防重放缓存（内存，仅用于当前进程）
+    private val nonceCache: MutableMap<String, Long> =
+        java.util.Collections.synchronizedMap(object : LinkedHashMap<String, Long>(1024, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean = size > 10000
+        })
+
+    private fun ensurePubKeyIdPrefix(id: String): String {
+        return if (id.startsWith("PUB_KEY_ID_")) id else "PUB_KEY_ID_$id"
+    }
+
+    private fun resolveWechatpaySerialHeader(): String? {
+        return if (!publicKeyNo.isNullOrBlank()) ensurePubKeyIdPrefix(publicKeyNo!!) else payCert?.serial_no
+    }
+
+    private fun isReplay(timestamp: String?, nonce: String?): Boolean {
+        if (timestamp.isNullOrBlank() || nonce.isNullOrBlank()) return true
+        val ts = timestamp.toLongOrNull() ?: return true
+        val now = System.currentTimeMillis() / 1000
+        if (kotlin.math.abs(now - ts) > 300) return true
+        synchronized(nonceCache) {
+            if (nonceCache.containsKey(nonce)) return true
+            nonceCache[nonce] = ts
+            // 清理过期项
+            val expireBefore = now - 600
+            val it = nonceCache.entries.iterator()
+            while (it.hasNext()) {
+                val e = it.next()
+                if (e.value < expireBefore) it.remove()
+            }
+        }
+        return false
+    }
 
     /**
      * jsapi支付接口
@@ -85,7 +118,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     /**
      * 删除分账接收方
      */
-    private val deleteReceiverUrl = "https://api.mch.weixin.qq.com/profitsharing/receivers/delete"
+    private val deleteReceiverUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/receivers/delete"
 
     /**
      * 请求分账
@@ -155,7 +188,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             )
             val header = getPayHeaders(genToken("POST", transferUrl, json))
             logger("pay:$payCert")
-            header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+            resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
             val entity = HttpEntity(json, header)
 //            val res = restTemplate.postForObject(transferUrl, entity, TransferVo::class.java)
             val res = restClient.post().uri(transferUrl).headers {
@@ -213,7 +246,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun genToken(method: String, url: String, body: String, initFlag: Boolean = false): String {
         val noticeStr = create_pay_nonce()
         val time = create_timestamp()
-        val processUrl = URL(url).path
+        val parsedUrl = URL(url)
+        val path = parsedUrl.path
+        val query = parsedUrl.query
+        val processUrl = if (query.isNullOrEmpty()) path else "$path?$query"
         logger("processUrl:${processUrl}")
         val message = genPaySign(method, processUrl, time, noticeStr, body)
         val signature = sign(message.toByteArray(charset(UTF8)), initFlag)
@@ -289,7 +325,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun verifyByPublicKey(str: String, signature: String, serial: String): Boolean {
         logger("verifyByPublicKey:$str signature:$signature serial:$serial")
         logger("publicKeyNo:$publicKeyNo")
-        if (serial !== publicKeyNo) return false
+        if (serial != publicKeyNo) return false
         val rsa = Signature.getInstance(SIGN_METHOD)
         rsa.initVerify(genPublicKeyWithPath())
         rsa.update(str.toByteArray(charset(UTF8)))
@@ -309,11 +345,12 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     }
 
     private fun decodeCallback(request: HttpServletRequest, apiV3Key: String): String? {
-        val timestamp = request.getHeader("wechatpay-timestamp")
-        val nonce = request.getHeader("wechatpay-nonce")
-        val signature = request.getHeader("wechatpay-signature")
+        val timestamp = request.getHeader("Wechatpay-Timestamp")
+        val nonce = request.getHeader("Wechatpay-Nonce")
+        val signature = request.getHeader("Wechatpay-Signature")
         val serial = request.getHeader("Wechatpay-Serial")
         logger("serial:$serial")
+        if (isReplay(timestamp, nonce)) return null
 
         val body = readIns(request.inputStream)
         logger("verify:${verifyByPublicKey(genPaySign(timestamp, nonce, body), signature, serial)}")
@@ -327,7 +364,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      * 支付回调
      */
     fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? {
-        val decodeStr = decodeCallback(request, apiV3Key)
+        val decodeStr = decodeCallback(request, apiV3Key) ?: return null
         return getMapper().readValue(decodeStr, H5PayDecodeVo::class.java)
     }
 
@@ -335,7 +372,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      * 退款回调
      */
     fun refundsCallbackFn(request: HttpServletRequest, apiV3Key: String): H5RefundsDecodeVo? {
-        val decodeStr = decodeCallback(request, apiV3Key)
+        val decodeStr = decodeCallback(request, apiV3Key) ?: return null
         return getMapper().readValue(decodeStr, H5RefundsDecodeVo::class.java)
     }
 
@@ -343,7 +380,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
      * 微信转账零钱回调
      */
     fun transCallbackFn(request: HttpServletRequest, apiV3Key: String): TransferCallbackVo? {
-        val decodeStr = decodeCallback(request, apiV3Key)
+        val decodeStr = decodeCallback(request, apiV3Key) ?: return null
         return getMapper().readValue(decodeStr, TransferCallbackVo::class.java)
     }
 
@@ -359,10 +396,22 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     }
 
     fun getLastCert(): PayCert? {
-        genCert()?.let {
-            return it.data.maxByOrNull { it.expire_time }!!
+        val res = genCert() ?: return null
+        val list = res.data
+        if (list.isEmpty()) return null
+        val now = Instant.now()
+        val active = list.filter { it.effective_time.toInstant() <= now && it.expire_time.toInstant() > now }
+        if (active.isNotEmpty()) {
+            // 选择“当前已生效”的证书中，生效时间最新的一张
+            return active.maxByOrNull { it.effective_time.toInstant() }
         }
-        return null
+        val future = list.filter { it.effective_time.toInstant() > now }
+        if (future.isNotEmpty()) {
+            // 若无已生效证书，则选择即将生效的最早一张，便于平滑切换
+            return future.minByOrNull { it.effective_time.toInstant() }
+        }
+        // 兜底：全部过期的情况下，返回过期时间最晚的一张
+        return list.maxByOrNull { it.expire_time.toInstant() }
     }
 
     @Deprecated("迁移到微信公钥")
@@ -446,7 +495,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                 )
             )
             val header = getPayHeaders(genToken("POST", addReceiverUrl, json))
-            header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+            resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
             return restClient.post().uri(addReceiverUrl).headers {
                 it.addAll(header)
             }.body(json).retrieve().toEntity<AddReceiverVo>().body
@@ -475,7 +524,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
                     })
             )
             val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
-            header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+            resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
             return restClient.post().uri(requestTransferUrl).headers {
                 it.addAll(header)
             }.body(json).retrieve().toEntity(RequestOrderVo::class.java).body
@@ -486,7 +535,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun unfreeze(unfreezeDto: UnfreezeDto): UnfreezeVo? {
         val json = mapper.writeValueAsString(unfreezeDto)
         val header = getPayHeaders(genToken("POST", unfreezeUrl, json))
-        header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+        resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
         return restClient.post().uri(unfreezeUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity(UnfreezeVo::class.java).body
@@ -499,7 +548,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         val url =
             "https://api.mch.weixin.qq.com/v3/profitsharing/orders/${dto.out_order_no}?transaction_id=${dto.transaction_id}"
         val header = getPayHeaders(genToken("POST", url, ""))
-        header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+        resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
         return restClient.get().uri(url).headers {
             it.addAll(header)
         }.retrieve().toEntity(FetchTransResultVo::class.java).body
@@ -511,7 +560,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun transRefunds(dto: TransReturnDto): TransReturnVo? {
         val json = mapper.writeValueAsString(dto)
         val header = getPayHeaders(genToken("POST", requestTransferReturnUrl, json))
-        header.add("Wechatpay-Serial", if (publicKeyNo.isNullOrBlank()) payCert?.serial_no else publicKeyNo)
+        resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
         return restClient.post().uri(requestTransferReturnUrl).headers {
             it.addAll(header)
         }.body(json).retrieve().toEntity(TransReturnVo::class.java).body
@@ -575,8 +624,10 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun getComplaintList(dto: SearchComplaintListDto): SearchComplaintPagesVo? {
         val url = appendQueryParamsWithObjectMapper(complaintListUrl, dto)
         logger("url:${url}")
-        val json = mapper.writeValueAsString(dto)
-        val header = getPayHeaders(genToken("GET", url, json))
+        val token = genToken("GET", url, "")
+        logger("Generated token: ${token}")
+        val header = getPayHeaders(token)
+        logger("header:$header")
         val res = restClient.get().uri(url).headers {
             it.addAll(header)
         }.retrieve().toEntity(SearchComplaintPagesVo::class.java).body
