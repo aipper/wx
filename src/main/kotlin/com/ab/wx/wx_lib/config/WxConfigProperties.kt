@@ -8,16 +8,21 @@ class WxConfigProperties {
 
     lateinit var appId: String
     lateinit var appSec: String
-    lateinit var miniAppId: String
-    lateinit var miniAppSec: String
     lateinit var wxToken: String
     var aesKey: String? = null
+    /**
+     * 公众号服务器回调域名，可选
+     */
+    var callbackBaseUrl: String? = null
 
+    /**
+     * 小程序配置，当不需要小程序相关能力时可以不配置
+     */
+    var miniApp: MiniAppProperties? = null
 
-    lateinit var miniAppIdTwo: String
-    lateinit var miniAppSecTwo: String
-
-    @get:ConfigurationProperties(prefix = "wx.pay")
-    var pay: WxPayConfigProperties? = null
-
+    class MiniAppProperties {
+        var enabled: Boolean = true
+        var appId: String? = null
+        var appSecret: String? = null
+    }
 }

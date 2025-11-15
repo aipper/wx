@@ -1,6 +1,5 @@
 package com.ab.wx.wx_lib.wx
 
-import com.ab.wx.wx_lib.config.WxConfigProperties
 import com.ab.wx.wx_lib.dto.miniapp.AppUniformMsgSendDto
 import com.ab.wx.wx_lib.fn.getRestTemplate
 import com.ab.wx.wx_lib.vo.miniapp.AppAccessTokenVo
@@ -54,10 +53,17 @@ class MiniApp(val miniAppId: String,val  miniAppSec: String) {
     /**
      * 统一消息回复
      */
-    fun uniformMsgSend(dto: AppUniformMsgSendDto) {
+    fun uniformMsgSend(dto: AppUniformMsgSendDto): Boolean {
+        if (accessToken.isBlank()) {
+            throw IllegalStateException("MiniApp accessToken is empty, please call genAccessToken() first")
+        }
         val url = """
             https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=${accessToken}
         """.trimIndent()
+        val entity = HttpEntity(dto)
+        val res = restTemplate.postForObject(url, entity, Map::class.java)
+        logger.info("uniformMsgSend response: {}", res)
+        return (res?.get("errcode") as? Number)?.toInt() == 0
     }
 
     /**

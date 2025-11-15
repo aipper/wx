@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
+import com.ab.wx.wx_lib.config.WxPayConfigProperties
 import com.ab.wx.wx_lib.dto.pay.*
 import com.ab.wx.wx_lib.fn.*
 import com.ab.wx.wx_lib.fn.aes.WxPayAes
@@ -10,275 +11,261 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
-import java.net.URL
+import java.nio.charset.StandardCharsets
 import java.security.KeyFactory
-import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
+import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import javax.servlet.http.HttpServletRequest
 
-
-class WxPay(wxConfigProperties: WxConfigProperties) {
+class WxPay(
+    wxConfigProperties: WxConfigProperties,
+    private val payConfig: WxPayConfigProperties
+) {
     private val logger = LoggerFactory.getLogger(WxPay::class.java)
-    private val mchId = wxConfigProperties.pay?.mchid
-    private val notifyUrl = wxConfigProperties.pay?.notifyUrl
-    private val refundsNotifyUrl = wxConfigProperties.pay?.refundsNotifyUrl
-
-    //    private val v3key = wxConfigProperties.pay?.v3key
-    private val keyPath = wxConfigProperties.pay?.keyPath
-    private val serialNo = wxConfigProperties.pay?.serialNo
-
-    private val SCHEMA = "WECHATPAY2-SHA256-RSA2048"
-    private val SIGN_METHOD = "SHA256withRSA"
-    private val UTF8 = "UTF-8"
-
-    private val appId = wxConfigProperties.appId
 
     private val restTemplate = getRestTemplate()
     private val mapper = getMapper()
 
-    private var x509Certificate: X509Certificate? = null
+    private val appId = wxConfigProperties.appId
+    private val mchId = payConfig.mchid ?: throw IllegalStateException("wx.pay.mchid must be configured")
+    private val notifyUrl = payConfig.notifyUrl
+    private val refundsNotifyUrl = payConfig.refundsNotifyUrl
+    private val serialNo = payConfig.serialNo
+    private val apiV3Key = payConfig.apiV3Key ?: throw IllegalStateException("wx.pay.api-v3-key must be configured")
+    private val apiHost = payConfig.apiHost.trimEnd('/')
 
-    /**
-     * jsapi支付接口
-     */
-    private val jsApiPayUrl = "https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi"
+    private val merchantPrivateKey: PrivateKey = loadPrivateKeyFromString(resolvePrivateKeyPem())
+    private val certificateCache: MutableMap<String, X509Certificate> = ConcurrentHashMap()
+    private var lastCertRefresh: Instant? = null
 
+    private val schema = "WECHATPAY2-SHA256-RSA2048"
+    private val signMethod = "SHA256withRSA"
 
-    /**
-     * h5支付接口
-     */
-    private val h5PayUrl = "https://api.mch.weixin.qq.com/v3/pay/transactions/h5"
+    private val jsApiPayPath = "/v3/pay/transactions/jsapi"
+    private val h5PayPath = "/v3/pay/transactions/h5"
+    private val certificatesPath = "/v3/certificates"
+    private val refundPath = "/v3/refund/domestic/refunds"
 
-    /**
-     * 获取平台证书
-     */
-    private val getCertsUrl = "https://api.mch.weixin.qq.com/v3/certificates"
-
-
-    private val refuseUrl = "https://api.mch.weixin.qq.com/v3/refund/domestic/refunds"
-
-
-//    fun genPaySign(method: String, url: String, time: String, nonceStr: String, content: String): String {
-//        return """
-//            $method
-//            $url
-//            $time
-//            $nonceStr
-//            $content
-//
-//        """.trimIndent()
-//    }
-
-
-    private fun loadPrivateKeyFromString(keyString: String): PrivateKey? {
-        return try {
-            val tmp = keyString.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
-                .replace("\\s+".toRegex(), "")
-            KeyFactory.getInstance("RSA").generatePrivate(PKCS8EncodedKeySpec(Base64.getDecoder().decode(tmp)))
-        } catch (e: NoSuchAlgorithmException) {
-            throw UnsupportedOperationException(e)
-        } catch (e: InvalidKeySpecException) {
-            throw IllegalArgumentException(e)
-        }
-    }
-
-    private fun genPrivateKeyWithPath(): String {
-        var result: String = ""
-        if (keyPath != null) {
-            FileInputStream(keyPath).use {
-                result = readIns(it)
-            }
-        }
-        return result
-    }
-
-
-    private fun genPrivateKey(key: String) {
-
-    }
-
-
-    //    private fun genFirstToken(method: String, url: String, body: String): String {
-//        val noticeStr = create_pay_nonce()
-//        val time = create_timestamp()
-//        val processUrl = URL(url).path
-//        val message = genPaySign(method, processUrl, time, noticeStr, body)
-//        logger.info("message:$message")
-//        val signature = sign(message.toByteArray(charset(UTF8)))
-//        return " mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
-//    }
-//
-    fun genToken(method: String, url: String, body: String): String {
-        val noticeStr = create_pay_nonce()
-        val time = create_timestamp()
-        val processUrl = URL(url).path
-        val message = genPaySign(method, processUrl, time, noticeStr, body)
-        logger.info("message:$message")
-        val signature = sign(message.toByteArray(charset(UTF8)))
-//        val signature = signWithAutoKey(message.toByteArray(charset(UTF8)))
-        return "$SCHEMA mchid=\"$mchId\",nonce_str=\"$noticeStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
-    }
-
-    private fun sign(message: ByteArray): String? {
-        val s = Signature.getInstance(SIGN_METHOD)
-        s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
-        s.update(message)
-        return Base64.getEncoder().encodeToString(s.sign())
-    }
-
-//    private fun signWithAutoKey(message: ByteArray): String? {
-//        val s = Signature.getInstance(SIGN_METHOD)
-//        s.initVerify(x509Certificate)
-//
-//        s.update(message)
-//        return Base64.getEncoder().encodeToString(s.sign())
-//    }
-
-    fun genSimplePay(dto: SimplePayDto, method: String): JsApiPayRes? {
-        mchId?.let {
-            val payDto = JsApiPayDto(
-                appid = appId,
-                mchid = mchId,
-                description = dto.description,
-                out_trade_no = dto.orderNo,
-                notify_url = dto.notifyUrl.ifBlank { "$notifyUrl" },
-                amount = JsApiPayAmountDto(total = dto.amount),
-                payer = JsApiPayerDto(dto.payOpenid)
-            )
-            return genJsApiPay(payDto, method, dto.orderNo)
-        }
-        return null
-    }
-
-    private fun genJsApiPay(dto: JsApiPayDto, method: String, orderNo: String): JsApiPayRes? {
-        val json = mapper.writeValueAsString(dto)
-        val header = getPayHeaders(genToken(method, jsApiPayUrl, json))
-        val entity = HttpEntity(json, header)
-//        val res = restTemplate.exchange(jsApiPayUrl, HttpMethod.POST, entity, String::class.java).body
-//        val
-//        r mapper.readValue(res, JsApiPayVo::class.java)
-        val res = restTemplate.postForObject(jsApiPayUrl, entity, JsApiPayVo::class.java)
-        logger.info("调用微信支付:$res")
-        res?.let {
-            return genJsSign(it.prepay_id, orderNo)
-        }
-        return null
-    }
-
-    fun verity(body: String, sign: String, serial: String): Boolean {
-        x509Certificate?.let {
-            val no = it.serialNumber.toString(16).uppercase()
-            return if (no == serial) {
-                val rsa = Signature.getInstance(SIGN_METHOD)
-                rsa.initVerify(it.publicKey)
-                rsa.update(body.toByteArray(charset(UTF8)))
-                rsa.verify(Base64.getDecoder().decode(sign))
-            } else false
-        }
-        return false
-    }
-
-    /**
-     * 生成前端的sign
-     */
-    private fun genJsSign(prepayId: String, orderNo: String): JsApiPayRes {
-        val time = create_timestamp()
-        val notifyCode = create_pay_nonce()
-        val signType = sign(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
-//        val signType = signWithAutoKey(genPaySign(appId, time, notifyCode, "prepay_id=$prepayId").toByteArray())
-        return JsApiPayRes(
-            prepayId = prepayId, timestamp = time, nonceStr = notifyCode, paySign = signType, orderId = orderNo
+    fun genSimplePay(dto: SimplePayDto): JsApiPayRes? {
+        val notifyEndpoint = dto.notifyUrl.ifBlank { notifyUrl }
+            ?: throw IllegalStateException("notify_url must be provided either on SimplePayDto or wx.pay.notify-url")
+        val request = JsApiPayDto(
+            appid = appId,
+            mchid = mchId,
+            description = dto.description,
+            out_trade_no = dto.orderNo,
+            notify_url = notifyEndpoint,
+            amount = JsApiPayAmountDto(total = dto.amount),
+            payer = JsApiPayerDto(dto.payOpenid)
         )
+        return jsapiPay(request)
     }
 
-    private fun decodeCallback(request: HttpServletRequest, apiV3Key: String): String? {
-        val timestamp = request.getHeader("wechatpay-timestamp")
-        val nonce = request.getHeader("wechatpay-nonce")
-        val signature = request.getHeader("wechatpay-signature")
-        val serial = request.getHeader("Wechatpay-Serial")
-
-        val body = readIns(request.inputStream)
-        val wxPayRes = getMapper().readValue(body, H5PayVo::class.java)
-        return WxPayAes.decryptToString(
-            wxPayRes.resource.associated_data, wxPayRes.resource.nonce, wxPayRes.resource.ciphertext, apiV3Key
-        )
+    fun jsapiPay(dto: JsApiPayDto): JsApiPayRes? {
+        val response = request(HttpMethod.POST, jsApiPayPath, dto, JsApiPayVo::class.java)
+        logger.info("JSAPI transaction request: {} -> {}", dto.out_trade_no, response)
+        return response?.prepay_id?.let { genJsSign(it, dto.out_trade_no) }
     }
 
-    fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? {
-        val decodeStr = decodeCallback(request, apiV3Key)
-        return getMapper().readValue(decodeStr, H5PayDecodeVo::class.java)
+    fun h5Pay(dto: H5PayDto): H5PrepayVo? {
+        val response = request(HttpMethod.POST, h5PayPath, dto, H5PrepayVo::class.java)
+        logger.info("H5 transaction request: {} -> {}", dto.out_trade_no, response)
+        return response
     }
 
-    fun refundsCallbackFn(request: HttpServletRequest, apiV3Key: String): H5RefundsDecodeVo? {
-        val decodeStr = decodeCallback(request, apiV3Key)
-        return getMapper().readValue(decodeStr, H5RefundsDecodeVo::class.java)
+    fun queryTransaction(outTradeNo: String): H5PayDecodeVo? {
+        val path = "/v3/pay/transactions/out-trade-no/$outTradeNo?mchid=$mchId"
+        return request(HttpMethod.GET, path, null, H5PayDecodeVo::class.java)
     }
 
-    /**
-     * 获取证书
-     */
-    private fun genCert(): PayCertResVo? {
-        val header = getPayHeaders(genToken("GET", getCertsUrl, ""))
-        logger.info("header:$header")
-        val entity = HttpEntity("", header)
-        return restTemplate.exchange(getCertsUrl, HttpMethod.GET, entity, PayCertResVo::class.java).body
+    fun queryTransactionById(transactionId: String): H5PayDecodeVo? {
+        val path = "/v3/pay/transactions/id/$transactionId?mchid=$mchId"
+        return request(HttpMethod.GET, path, null, H5PayDecodeVo::class.java)
     }
 
-    fun getLastCert(): PayCert? {
-        genCert()?.let {
-            return it.data.maxByOrNull { it.expire_time }!!
-        }
-        return null
+    fun closeOrder(outTradeNo: String) {
+        val path = "/v3/pay/transactions/out-trade-no/$outTradeNo/close"
+        val body = mapOf("mchid" to mchId)
+        request(HttpMethod.POST, path, body, String::class.java)
     }
 
-    fun autoGenCert(apiV3Key: String): X509Certificate? {
-        val lastCert = getLastCert()
-        lastCert?.let {
-            val encryptCert = it.encrypt_certificate
-            val cf = CertificateFactory.getInstance("X509")
-            val res = WxPayAes.decryptToString(
-                encryptCert.associated_data, encryptCert.nonce, encryptCert.ciphertext, apiV3Key
-            )
-            val cert: X509Certificate =
-                cf.generateCertificate(ByteArrayInputStream(res?.toByteArray(charset(UTF8)))) as X509Certificate
-            cert.checkValidity()
-            x509Certificate = cert
-            return cert
-        }
-        return null
+    fun refund(refundPayDto: RefundPayDto): String? {
+        val payload = refundPayDto.copy(notify_url = refundPayDto.notify_url ?: refundsNotifyUrl)
+        return request(HttpMethod.POST, refundPath, payload, String::class.java)
     }
 
     fun simpleRefunds(dto: SimpleRefundsDto): String? {
-        return refunds(
+        return refund(
             RefundPayDto(
-                out_refund_no = dto.refundsOrderId, out_trade_no = dto.orderId, amount = RefundsAmount(
-                    refund = dto.refundsMoney, total = dto.totalMoney
-                ), notify_url = refundsNotifyUrl
+                out_refund_no = dto.refundsOrderId,
+                out_trade_no = dto.orderId,
+                amount = RefundsAmount(refund = dto.refundsMoney, total = dto.totalMoney),
+                notify_url = refundsNotifyUrl
             )
         )
-    }
-
-    private fun refunds(refundPayDto: RefundPayDto): String? {
-        val json = mapper.writeValueAsString(refundPayDto)
-        val header = getPayHeaders(genToken("POST", refuseUrl, json))
-        val entity = HttpEntity(json, header)
-        return restTemplate.postForObject(refuseUrl, entity, String::class.java)
     }
 
     fun refundsWithPromotion(dto: RefundsWithPromotionDto): String? {
-        return refunds(
+        return refund(
             RefundPayDto(
-                out_refund_no = dto.refundsOrderId, out_trade_no = dto.orderId, amount = RefundsAmount(
-                    refund = dto.refundsMoney, total = dto.totalMoney,
-                ), notify_url = refundsNotifyUrl,
+                out_refund_no = dto.refundsOrderId,
+                out_trade_no = dto.orderId,
+                amount = RefundsAmount(refund = dto.refundsMoney, total = dto.totalMoney),
+                notify_url = refundsNotifyUrl
             )
         )
     }
 
+    fun queryRefund(outRefundNo: String): H5RefundsDecodeVo? {
+        val path = "$refundPath/$outRefundNo"
+        return request(HttpMethod.GET, path, null, H5RefundsDecodeVo::class.java)
+    }
+
+    fun callbackFn(request: HttpServletRequest): H5PayDecodeVo? {
+        return parseNotification(request, H5PayDecodeVo::class.java)
+    }
+
+    fun refundsCallbackFn(request: HttpServletRequest): H5RefundsDecodeVo? {
+        return parseNotification(request, H5RefundsDecodeVo::class.java)
+    }
+
+    @Deprecated("apiV3Key is now read from WxPayConfigProperties")
+    fun callbackFn(request: HttpServletRequest, apiV3Key: String): H5PayDecodeVo? = callbackFn(request)
+
+    @Deprecated("apiV3Key is now read from WxPayConfigProperties")
+    fun refundsCallbackFn(request: HttpServletRequest, apiV3Key: String): H5RefundsDecodeVo? = refundsCallbackFn(request)
+
+    fun verifySignature(timestamp: String?, nonce: String?, body: String, signature: String?, serial: String?): Boolean {
+        if (signature.isNullOrBlank() || serial.isNullOrBlank()) {
+            logger.warn("Missing signature headers, serial={}, signature={}", serial, signature)
+            return false
+        }
+        val certificate = try {
+            ensureCertificate(serial)
+        } catch (ex: Exception) {
+            logger.error("Cannot load certificate for serial {}", serial, ex)
+            return false
+        }
+        return try {
+            val verifier = Signature.getInstance(signMethod)
+            verifier.initVerify(certificate.publicKey)
+            val message = if (!timestamp.isNullOrBlank() && !nonce.isNullOrBlank()) {
+                genPaySign(timestamp, nonce, body)
+            } else {
+                body
+            }
+            verifier.update(message.toByteArray(StandardCharsets.UTF_8))
+            verifier.verify(Base64.getDecoder().decode(signature))
+        } catch (ex: Exception) {
+            logger.error("Signature verification failed", ex)
+            false
+        }
+    }
+
+    private fun <T> parseNotification(request: HttpServletRequest, clazz: Class<T>): T? {
+        val body = readIns(request.inputStream)
+        val timestamp = request.getHeader("Wechatpay-Timestamp")
+        val nonce = request.getHeader("Wechatpay-Nonce")
+        val signature = request.getHeader("Wechatpay-Signature")
+        val serial = request.getHeader("Wechatpay-Serial")
+        if (!verifySignature(timestamp, nonce, body, signature, serial)) {
+            logger.warn("Invalid notification signature, serial={} body={} ", serial, body)
+            return null
+        }
+        val wrapper = mapper.readValue(body, H5PayVo::class.java)
+        val plainText = WxPayAes.decryptToString(
+            wrapper.resource.associated_data,
+            wrapper.resource.nonce,
+            wrapper.resource.ciphertext,
+            apiV3Key
+        ) ?: return null
+        return mapper.readValue(plainText, clazz)
+    }
+
+    private fun resolvePrivateKeyPem(): String {
+        payConfig.privateKey?.takeIf { it.isNotBlank() }?.let { return it }
+        val path = payConfig.keyPath?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("wx.pay.private-key or wx.pay.key-path must be configured")
+        FileInputStream(path).use { return readIns(it) }
+    }
+
+    private fun loadPrivateKeyFromString(keyString: String): PrivateKey {
+        val normalized = keyString.replace("-----BEGIN PRIVATE KEY-----", "")
+            .replace("-----END PRIVATE KEY-----", "")
+            .replace("\\s+".toRegex(), "")
+        val keySpec = PKCS8EncodedKeySpec(Base64.getDecoder().decode(normalized))
+        return KeyFactory.getInstance("RSA").generatePrivate(keySpec)
+    }
+
+    private fun genToken(method: String, pathWithQuery: String, body: String): String {
+        val nonceStr = create_pay_nonce()
+        val time = create_timestamp()
+        val message = genPaySign(method, pathWithQuery, time, nonceStr, body)
+        val signature = sign(message.toByteArray(StandardCharsets.UTF_8))
+        return "$schema mchid=\"$mchId\",nonce_str=\"$nonceStr\",timestamp=\"$time\",serial_no=\"$serialNo\",signature=\"$signature\""
+    }
+
+    private fun sign(message: ByteArray): String {
+        val signature = Signature.getInstance(signMethod)
+        signature.initSign(merchantPrivateKey)
+        signature.update(message)
+        return Base64.getEncoder().encodeToString(signature.sign())
+    }
+
+    private fun genJsSign(prepayId: String, orderNo: String): JsApiPayRes {
+        val time = create_timestamp()
+        val nonce = create_pay_nonce()
+        val paySign = sign(genPaySign(appId, time, nonce, "prepay_id=$prepayId").toByteArray(StandardCharsets.UTF_8))
+        return JsApiPayRes(prepayId = prepayId, timestamp = time, nonceStr = nonce, paySign = paySign, orderId = orderNo)
+    }
+
+    private fun <T> request(method: HttpMethod, pathWithQuery: String, body: Any?, responseType: Class<T>): T? {
+        val payload = body?.let { mapper.writeValueAsString(it) }
+        val token = genToken(method.name, pathWithQuery, payload ?: "")
+        val headers = getPayHeaders(token)
+        val entity: HttpEntity<*> = if (payload == null) {
+            HttpEntity<Any>(headers)
+        } else {
+            HttpEntity(payload, headers)
+        }
+        val url = "$apiHost$pathWithQuery"
+        val response = restTemplate.exchange(url, method, entity, responseType)
+        return response.body
+    }
+
+    private fun ensureCertificate(serial: String): X509Certificate {
+        certificateCache[serial]?.let { return it }
+        if (payConfig.autoUpdateCertificate) {
+            val now = Instant.now()
+            if (lastCertRefresh == null || now.isAfter(lastCertRefresh!!.plus(payConfig.certificateTtl))) {
+                refreshCertificates()
+            }
+        }
+        return certificateCache[serial]
+            ?: throw IllegalStateException("Certificate $serial not found, please call refreshCertificates() first")
+    }
+
+    private fun refreshCertificates() {
+        val response = request(HttpMethod.GET, certificatesPath, null, PayCertResVo::class.java) ?: return
+        val cf = CertificateFactory.getInstance("X509")
+        response.data.forEach { cert ->
+            val encryptCert = cert.encrypt_certificate
+            val plain = WxPayAes.decryptToString(
+                encryptCert.associated_data,
+                encryptCert.nonce,
+                encryptCert.ciphertext,
+                apiV3Key
+            ) ?: return@forEach
+            val certificate = cf.generateCertificate(ByteArrayInputStream(plain.toByteArray(StandardCharsets.UTF_8))) as X509Certificate
+            certificate.checkValidity()
+            certificateCache[cert.serial_no] = certificate
+        }
+        lastCertRefresh = Instant.now()
+    }
 }

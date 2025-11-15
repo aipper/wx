@@ -6,6 +6,7 @@ import com.ab.wx.wx_lib.const.R
 import com.ab.wx.wx_lib.exception.RestErrHandler
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -19,6 +20,8 @@ import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.util.*
 import java.util.stream.Collectors
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 
 
 private val logger = LoggerFactory.getLogger("Fn")
@@ -87,7 +90,9 @@ fun getRestTemplate(): RestTemplate {
     val stringHttpMessageConverter = StringHttpMessageConverter()
     stringHttpMessageConverter.supportedMediaTypes =
         arrayListOf(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.TEXT_HTML)
-    res.messageConverters.add(WxMappingJackson2HttpMessageConverter())
+    val jsonConverter = WxMappingJackson2HttpMessageConverter()
+    jsonConverter.objectMapper = getMapper()
+    res.messageConverters.add(jsonConverter)
     res.messageConverters.add(stringHttpMessageConverter)
     res.errorHandler = RestErrHandler()
     return res
@@ -127,6 +132,9 @@ fun getPayHeaders(token: String): HttpHeaders {
 fun getMapper(): ObjectMapper {
     val mapper = ObjectMapper()
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    mapper.registerModule(KotlinModule())
+    mapper.registerModule(JavaTimeModule())
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     return mapper
 }
 
