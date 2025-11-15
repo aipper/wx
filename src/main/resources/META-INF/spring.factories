@@ -1,1 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.ab.wx.wx_lib.config.WxAutoConfig,com.ab.wx.wx_lib.config.WxPayAutoConfig
