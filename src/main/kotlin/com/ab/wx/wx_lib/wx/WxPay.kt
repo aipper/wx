@@ -20,8 +20,8 @@ import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
-import java.util.*
 import java.time.Instant
+import java.util.*
 import javax.crypto.Cipher
 
 
@@ -53,6 +53,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
     private var x509Certificate: X509Certificate? = null
     private var payCert: PayCert? = null
+
     // 防重放缓存（内存，仅用于当前进程）
     private val nonceCache: MutableMap<String, Long> =
         java.util.Collections.synchronizedMap(object : LinkedHashMap<String, Long>(1024, 0.75f, true) {
@@ -261,10 +262,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
 
 
     private fun sign(message: ByteArray, initFlag: Boolean = false): String? {
-        val s = Signature.getInstance(SIGN_METHOD)
-        s.initSign(loadPrivateKeyFromString(genPrivateKeyWithPath()))
-        s.update(message)
-        return Base64.getEncoder().encodeToString(s.sign())
+        keyPath?.let { keyPath ->
+            val s = Signature.getInstance(SIGN_METHOD)
+            s.initSign(loadPrivateKeyFromString(keyPath))
+            s.update(message)
+            return Base64.getEncoder().encodeToString(s.sign())
+        }
+        return null
     }
 
 
