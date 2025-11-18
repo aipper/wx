@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-11-18 14:37:56 CST",
+  "executor": "Codex",
+  "scan": {
+    "技术栈": "Kotlin + Spring Boot + Maven",
+    "关键文件": [
+      "src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt",
+      "src/main/kotlin/com/ab/wx/wx_lib/vo/pay/H5PayVo.kt",
+      "src/main/kotlin/com/ab/wx/wx_lib/vo/pay/ProfitSharingNotifyVo.kt",
+      "src/main/kotlin/com/ab/wx/wx_lib/fn/Fn.kt"
+    ],
+    "分账动账通知处理": {
+      "入口": "WxPay.profitSharingNotifyCallback(HttpServletRequest, apiV3Key)",
+      "流程": "decodeCallback 读取头/体 -> 验签日志 -> 使用 H5PayVo 封装 resource -> WxPayAes 解密 -> Jackson 解析为 ProfitSharingNotifyVo",
+      "注意点": "ProfitSharingNotifyVo 仅包含 receiver 单对象，命名为 receiver_account 等，可能与微信文档中的 receivers 数组、account/finish_time 等字段不一致；解密前验签结果未参与控制流程。"
+    },
+    "通用回调解密": "decodeCallback 通过 Wechatpay-Timestamp/Nonce/Signature/Serial 构造验签串 genPaySign(timestamp, nonce, body)，验签使用配置的公钥模式或本地公钥，重放窗口 5 分钟。"
+  },
+  "信息缺口": [
+    "需核对官方文档的分账动账通知字段列表（event_type、associated_data、receivers/finish_time/state 等）与现有 VO 是否匹配。",
+    "暂无相关单测，无法自动复现回调解密流程。"
+  ]
+}

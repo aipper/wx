@@ -1,0 +1,22 @@
+# operations-log
+
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`ls .claude`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：目录不存在。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`ls`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看仓库根目录文件列表。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`rg --files -g'operations-log.md'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：未找到 operations-log.md。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '1,200p' src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看 WxPay.kt 开头内容。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`rg -n "profit" src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：定位分账相关代码行。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '560,760p' src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看分账接口与回调片段。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`rg -n "decodeCallback" -n src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查找回调解密函数位置。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '360,430p' src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看 decodeCallback 及关联回调实现。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`rg -n "genPaySign\\(" src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：确认签名字符串生成调用。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '150,210p' src/main/kotlin/com/ab/wx/wx_lib/fn/Fn.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看 genPaySign 实现。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '1,200p' src/main/kotlin/com/ab/wx/wx_lib/vo/pay/H5PayVo.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看通知 VO 结构。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '1,200p' src/main/kotlin/com/ab/wx/wx_lib/vo/pay/ProfitSharingNotifyVo.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看分账动账通知 VO 结构。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`sed -n '1,200p' 微信支付公钥模式实现指南.md`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查阅分账动账通知实现说明。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`env TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：记录操作时间。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：apply_patch，操作：新增文件 operations-log.md，摘要：建立操作留痕文档并填充初始记录。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`mkdir -p .claude`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：创建上下文字典目录。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：apply_patch，操作：新增文件 .claude/context-initial.json，摘要：记录初步扫描与信息缺口。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`nl -ba src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt | sed -n '650,720p'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：标注分账回调函数行号。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`nl -ba src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt | sed -n '340,420p'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：标注回调解密与验签逻辑行号。
+- 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`nl -ba src/main/kotlin/com/ab/wx/wx_lib/vo/pay/ProfitSharingNotifyVo.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：标注分账通知 VO 行号。

@@ -86,6 +86,31 @@
       "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties"
     },
     {
+      "name": "wx.pay.use-public-key-mode",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "defaultValue": false,
+      "description": "是否使用微信支付公钥模式（默认为false，使用证书模式）"
+    },
+    {
+      "name": "wx.pay.wechat-pay-public-key",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "description": "微信支付公钥内容（当use-public-key-mode为true时使用）"
+    },
+    {
+      "name": "wx.pay.wechat-pay-public-key-id",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "description": "微信支付公钥ID（当use-public-key-mode为true时使用）"
+    },
+    {
+      "name": "wx.pay.profit-sharing-notify-url",
+      "type": "java.lang.String",
+      "sourceType": "com.ab.wx.wx_lib.config.WxPayConfigProperties",
+      "description": "分账动账通知URL"
+    },
+    {
       "name": "wx.wx-token",
       "type": "java.lang.String",
       "sourceType": "com.ab.wx.wx_lib.config.WxConfigProperties"

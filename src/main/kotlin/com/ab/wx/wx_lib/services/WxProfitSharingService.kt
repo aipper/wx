@@ -6,8 +6,10 @@ import com.ab.wx.wx_lib.dto.pay.RequestOrderDto
 import com.ab.wx.wx_lib.dto.pay.UnfreezeDto
 import com.ab.wx.wx_lib.vo.pay.AddReceiverVo
 import com.ab.wx.wx_lib.vo.pay.DelReceiverVo
+import com.ab.wx.wx_lib.vo.pay.ProfitSharingNotifyVo
 import com.ab.wx.wx_lib.vo.pay.RequestOrderVo
 import com.ab.wx.wx_lib.vo.pay.UnfreezeVo
+import jakarta.servlet.http.HttpServletRequest
 
 
 /**
@@ -41,4 +43,12 @@ interface WxProfitSharingService {
      * @return 解冻结果
      */
     fun unfreeze(dto: UnfreezeDto): Result<UnfreezeVo>
+
+    /**
+     * 分账动账通知回调处理
+     * @param request HTTP请求对象
+     * @param apiV3Key APIv3密钥
+     * @return 分账动账通知数据
+     */
+    fun profitSharingNotifyCallback(request: HttpServletRequest, apiV3Key: String): Result<ProfitSharingNotifyVo>
 }

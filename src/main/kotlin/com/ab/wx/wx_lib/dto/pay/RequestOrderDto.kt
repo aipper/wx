@@ -6,11 +6,10 @@ data class RequestOrderDto(
     val appid: String = "",
     val transaction_id: String = "",
     val out_order_no: String = "",
-    val receivers:List<Receiver> = arrayListOf(),
-    val unfreeze_unsplit:Boolean = true,
-
-
-    )
+    val receivers: List<Receiver> = arrayListOf(),
+    val unfreeze_unsplit: Boolean = true,
+    val notify_url: String = "",
+)
 
 data class Receiver(
     val type: AddReceiverEnums = AddReceiverEnums.MERCHANT_ID,

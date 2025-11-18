@@ -1,6 +1,7 @@
 package com.ab.wx.wx_lib.wx
 
 import com.ab.wx.wx_lib.config.WxConfigProperties
+import com.ab.wx.wx_lib.config.WxPayPublicKeyConfig
 import com.ab.wx.wx_lib.dto.ResponseComplaintDto
 import com.ab.wx.wx_lib.dto.pay.*
 import com.ab.wx.wx_lib.fn.*
@@ -30,6 +31,7 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val notifyUrl = wxConfigProperties.pay?.notifyUrl
     private val refundsNotifyUrl = wxConfigProperties.pay?.refundsNotifyUrl
     private val transCallbackUrl = wxConfigProperties.pay?.transCallbackUrl
+    private val profitSharingNotifyUrl = wxConfigProperties.pay?.profitSharingNotifyUrl
 
     //    private val v3key = wxConfigProperties.pay?.v3key
     private val keyPath = wxConfigProperties.pay?.keyPath
@@ -38,6 +40,15 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val publicKeyNo = wxConfigProperties.pay?.publicKeyNo
 
     private val v3Key = wxConfigProperties.pay?.v3key
+
+    // 微信支付公钥模式相关配置
+    private val usePublicKeyMode = wxConfigProperties.pay?.usePublicKeyMode ?: false
+    private val wechatPayPublicKeyConfig: WxPayPublicKeyConfig? = if (usePublicKeyMode) {
+        WxPayPublicKeyConfig(
+            wxConfigProperties.pay?.wechatPayPublicKey,
+            wxConfigProperties.pay?.wechatPayPublicKeyId
+        )
+    } else null
 
     private val SCHEMA = "WECHATPAY2-SHA256-RSA2048"
     private val SIGN_METHOD = "SHA256withRSA"
@@ -65,7 +76,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     }
 
     private fun resolveWechatpaySerialHeader(): String? {
-        return if (!publicKeyNo.isNullOrBlank()) ensurePubKeyIdPrefix(publicKeyNo!!) else payCert?.serial_no
+        return if (usePublicKeyMode) {
+            // 公钥模式下使用微信支付公钥ID
+            wechatPayPublicKeyConfig?.getPublicKeyId()
+        } else {
+            // 证书模式下使用平台证书序列号或公钥ID
+            if (!publicKeyNo.isNullOrBlank()) ensurePubKeyIdPrefix(publicKeyNo!!) else payCert?.serial_no
+        }
     }
 
     private fun isReplay(timestamp: String?, nonce: String?): Boolean {
@@ -329,11 +346,28 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun verifyByPublicKey(str: String, signature: String, serial: String): Boolean {
         logger("verifyByPublicKey:$str signature:$signature serial:$serial")
         logger("publicKeyNo:$publicKeyNo")
-        if (serial != publicKeyNo) return false
-        val rsa = Signature.getInstance(SIGN_METHOD)
-        rsa.initVerify(genPublicKeyWithPath())
-        rsa.update(str.toByteArray(charset(UTF8)))
-        return rsa.verify(Base64.getDecoder().decode(signature))
+        logger("usePublicKeyMode:$usePublicKeyMode")
+
+        return if (usePublicKeyMode) {
+            // 公钥模式：使用微信支付公钥验签
+            if (serial != wechatPayPublicKeyConfig?.getPublicKeyId()) {
+                logger("Serial号不匹配，期望：${wechatPayPublicKeyConfig?.getPublicKeyId()}，实际：$serial")
+                return false
+            }
+            val rsa = Signature.getInstance(SIGN_METHOD)
+            rsa.initVerify(wechatPayPublicKeyConfig?.getPublicKey())
+            rsa.update(str.toByteArray(charset(UTF8)))
+            val result = rsa.verify(Base64.getDecoder().decode(signature))
+            logger("公钥模式验签结果：$result")
+            result
+        } else {
+            // 证书模式：使用平台证书或自定义公钥验签
+            if (serial != publicKeyNo) return false
+            val rsa = Signature.getInstance(SIGN_METHOD)
+            rsa.initVerify(genPublicKeyWithPath())
+            rsa.update(str.toByteArray(charset(UTF8)))
+            rsa.verify(Base64.getDecoder().decode(signature))
+        }
     }
 
     /**
@@ -477,10 +511,18 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun encodeSensitive(msg: String?): String? {
         val instance = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding")
         v3Key?.let {
-            val key = if (publicKeyNo.isNullOrBlank()) autoGenCert(v3Key)?.publicKey else genPublicKeyWithPath()
-            instance.init(Cipher.ENCRYPT_MODE, key)
-            val message = msg?.toByteArray()
-            return Base64.getEncoder().encodeToString(instance.doFinal(message))
+            val key = if (usePublicKeyMode) {
+                // 公钥模式：使用微信支付公钥加密
+                wechatPayPublicKeyConfig?.getPublicKey()
+            } else {
+                // 证书模式：使用平台证书公钥或自定义公钥加密
+                if (publicKeyNo.isNullOrBlank()) autoGenCert(v3Key)?.publicKey else genPublicKeyWithPath()
+            }
+            key?.let {
+                instance.init(Cipher.ENCRYPT_MODE, it)
+                val message = msg?.toByteArray()
+                return Base64.getEncoder().encodeToString(instance.doFinal(message))
+            }
         }
         return null
     }
@@ -519,13 +561,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
         v3Key?.let {
             val json = mapper.writeValueAsString(
                 requestOrderDto.copy(
-                    receivers = requestOrderDto.receivers.map {
-                        it.copy(
-                            name = encodeSensitive(
-                                it.name
-                            )
+                    receivers = requestOrderDto.receivers.map { receiver ->
+                        receiver.copy(
+                            name = encodeSensitive(receiver.name)
                         )
-                    })
+                    },
+                    notify_url = requestOrderDto.notify_url.ifBlank { profitSharingNotifyUrl ?: "" }
+                ),
             )
             val header = getPayHeaders(genToken("POST", requestTransferUrl, json))
             resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
@@ -636,5 +678,13 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
             it.addAll(header)
         }.retrieve().toEntity(SearchComplaintPagesVo::class.java).body
         return res
+    }
+
+    /**
+     * 分账动账通知回调处理
+     */
+    fun profitSharingNotifyCallback(request: HttpServletRequest, apiV3Key: String): ProfitSharingNotifyVo? {
+        val decodeStr = decodeCallback(request, apiV3Key) ?: return null
+        return getMapper().readValue(decodeStr, ProfitSharingNotifyVo::class.java)
     }
 }

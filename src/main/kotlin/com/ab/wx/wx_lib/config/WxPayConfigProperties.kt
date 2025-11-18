@@ -11,4 +11,17 @@ class WxPayConfigProperties {
     var transCallbackUrl: String? = null
     var publicKeyPath: String? = null
     var publicKeyNo: String? = null
+    var profitSharingNotifyUrl: String? = null
+    /**
+     * 是否使用微信支付公钥模式（默认为false，使用证书模式）
+     */
+    var usePublicKeyMode: Boolean = false
+    /**
+     * 微信支付公钥内容（当usePublicKeyMode为true时使用）
+     */
+    var wechatPayPublicKey: String? = null
+    /**
+     * 微信支付公钥ID（当usePublicKeyMode为true时使用）
+     */
+    var wechatPayPublicKeyId: String? = null
 }
