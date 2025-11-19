@@ -154,6 +154,11 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     private val unfreezeUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/orders/unfreeze"
 
     /**
+     * 查询最大分账比例
+     */
+    private val queryMaxRatioUrl = "https://api.mch.weixin.qq.com/v3/profitsharing/merchant-configs"
+
+    /**
      *创建投诉通知回调地址
      */
     private val complaintNotifyUrl = "https://api.mch.weixin.qq.com/v3/merchant-service/complaint-notifications"
@@ -686,5 +691,17 @@ class WxPay(wxConfigProperties: WxConfigProperties) {
     fun profitSharingNotifyCallback(request: HttpServletRequest, apiV3Key: String): ProfitSharingNotifyVo? {
         val decodeStr = decodeCallback(request, apiV3Key) ?: return null
         return getMapper().readValue(decodeStr, ProfitSharingNotifyVo::class.java)
+    }
+
+    /**
+     * 查询最大分账比例
+     */
+    fun queryMaxRatio(dto: QueryMaxRatioDto): QueryMaxRatioVo? {
+        val url = "$queryMaxRatioUrl/${dto.subMchid}"
+        val header = getPayHeaders(genToken("GET", url, ""))
+        resolveWechatpaySerialHeader()?.let { header.add("Wechatpay-Serial", it) }
+        return restClient.get().uri(url).headers {
+            it.addAll(header)
+        }.retrieve().toEntity(QueryMaxRatioVo::class.java).body
     }
 }
