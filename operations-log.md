@@ -20,3 +20,17 @@
 - 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`nl -ba src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt | sed -n '650,720p'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：标注分账回调函数行号。
 - 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`nl -ba src/main/kotlin/com/ab/wx/wx_lib/wx/WxPay.kt | sed -n '340,420p'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：标注回调解密与验签逻辑行号。
 - 2025-11-18 14:37:56 CST，执行者：Codex，工具：shell，命令：`nl -ba src/main/kotlin/com/ab/wx/wx_lib/vo/pay/ProfitSharingNotifyVo.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：标注分账通知 VO 行号。
+- 2025-11-22 11:40:13 CST，执行者：Codex，工具：shell，命令：`ls .claude`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看上下文目录。
+- 2025-11-22 11:40:13 CST，执行者：Codex，工具：shell，命令：`cat .claude/context-initial.json`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：读取初始上下文。
+- 2025-11-22 11:40:13 CST，执行者：Codex，工具：shell，命令：`ls`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看仓库根目录。
+- 2025-11-22 11:40:13 CST，执行者：Codex，工具：shell，命令：`cat operations-log.md`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看操作日志现有记录。
+- 2025-11-22 11:40:13 CST，执行者：Codex，工具：shell，命令：`env TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：记录当前操作时间。
+- 2025-11-22 11:40:50 CST，执行者：Codex，工具：shell，命令：`tail -n 20 operations-log.md`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看日志末尾内容。
+- 2025-11-22 11:40:52 CST，执行者：Codex，工具：apply_patch，操作：更新 operations-log.md 追加新命令记录（首次失败，原因：上下文不匹配）。
+- 2025-11-22 11:40:57 CST，执行者：Codex，工具：apply_patch，操作：更新 operations-log.md 追加新命令记录（成功）。
+- 2025-11-22 11:41:05 CST，执行者：Codex，工具：shell，命令：`rg -n "UnfreezeVo" src/main/kotlin`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：定位解冻 VO 相关引用。
+- 2025-11-22 11:41:08 CST，执行者：Codex，工具：shell，命令：`sed -n '1,200p' src/main/kotlin/com/ab/wx/wx_lib/vo/pay/UnfreezeVo.kt`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：查看解冻响应 VO 定义。
+- 2025-11-22 11:41:18 CST，执行者：Codex，工具：shell，命令：`env TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：记录当前操作时间。
+- 2025-11-22 13:12:08 CST，执行者：Codex，工具：shell，命令：`env TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z'`（工作目录：/Users/ab/zczx/java/wx_lib），摘要：记录当前操作时间。
+- 2025-11-22 13:12:15 CST，执行者：Codex，工具：apply_patch，操作：更新 src/main/kotlin/com/ab/wx/wx_lib/vo/pay/UnfreezeVo.kt 将时间字段调整为 OffsetDateTime 以匹配带时区返回。
+- 2025-11-22 13:12:20 CST，执行者：Codex，工具：apply_patch，操作：更新 operations-log.md 追加最新操作记录。
